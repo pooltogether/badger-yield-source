@@ -21,6 +21,12 @@ const config: HardhatUserConfig = {
         url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
       },
         chainId: 1,
+    },
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC
+      }
     }
   },
   etherscan: {

@@ -40,3 +40,10 @@ yarn test
 yarn coverage
 ```
 
+# Deployement
+
+```
+export HDWALLET_MNEMONIC=
+ npx hardhat run --network NETWORK scripts/deploy.js
+```
+
