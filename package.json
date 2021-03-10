@@ -1,0 +1,40 @@
+{
+  "name": "aave-yield-source-spec",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-solhint": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^3.1.0",
+    "@typechain/ethers-v5": "^6.0.2",
+    "@types/mocha": "^8.2.1",
+    "@types/node": "^14.14.32",
+    "ethereum-waffle": "^3.3.0",
+    "ethers": "^5.0.32",
+    "hardhat": "^2.1.1",
+    "hardhat-etherscan-abi": "^0.1.1",
+    "hardhat-typechain": "^0.3.5",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.6",
+    "solidity-coverage": "^0.7.16",
+    "ts-generator": "^0.1.1",
+    "ts-node": "^9.1.1",
+    "typechain": "^4.0.3",
+    "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "@pooltogether/pooltogether-contracts": "^3.3.2"
+  },
+  "scripts": {
+    "build": "hardhat compile",
+    "console": "hardhat console",
+    "verify": "yarn hint && yarn test",
+    "test": "yarn hardhat test --network hardhat",
+    "lint": "yarn solhint 'contracts/**/*.sol' && yarn prettier -c './**/*.js'",
+    "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js",
+    "hint": "solhint \"contracts/**/*.sol\"",
+    "coverage": "yarn hardhat coverage  --testfiles \"test/*.js\""
+  }
+}
