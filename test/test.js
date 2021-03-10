@@ -124,8 +124,6 @@ describe("SushiYieldSource", function () {
       wallets[1].address
     );
     expect(await sushiBar.balanceOf(prizePool.address)) != 0;
-
-    console.log(await yieldSource.balanceOf(prizePool.address));
   });
 
   it("should be able to withdraw", async function () {
@@ -149,11 +147,35 @@ describe("SushiYieldSource", function () {
     );
     expect(await sushiBar.balanceOf(wallet.address)) > balanceBefore;
   });
-});
 
-// function depositTo(
-//   address to,
-//   uint256 amount,
-//   address controlledToken,
-//   address referrer
-// )
+  it("should be able to withdraw all", async function () {
+    await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
+    let [token] = await prizePool.tokens();
+
+    const initialBalance = await sushi.balanceOf(wallet.address);
+
+    await prizePool.depositTo(
+      wallet.address,
+      toWei("100"),
+      token,
+      wallets[1].address
+    );
+
+    expect(await sushiBar.balanceOf(prizePool.address)) != 0;
+
+    hre.network.provider.send("evm_increaseTime", [1000]);
+
+    await expect(
+      prizePool.withdrawInstantlyFrom(wallet.address, toWei("200"), token, 0)
+    ).to.be.reverted;
+
+    await prizePool.withdrawInstantlyFrom(
+      wallet.address,
+      toWei("100"),
+      token,
+      0
+    );
+
+    expect(await sushi.balanceOf(wallet.address)) == initialBalance;
+  });
+});
