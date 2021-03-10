@@ -82,10 +82,15 @@ contract SushiYieldSource is IYieldSource {
         ISushiBar bar = ISushiBar(sushiBar);
         ISushi sushi = ISushi(sushiAddr);
 
+        uint256 totalShares = bar.totalSupply();
+        uint256 barSushiBalance = sushi.balanceOf(address(bar));
+        uint256 requiredShares =
+            redeemAmount.mul(totalShares).div(barSushiBalance);
+
         uint256 barBeforeBalance = bar.balanceOf(address(this));
         uint256 sushiBeforeBalance = sushi.balanceOf(address(this));
 
-        bar.leave(redeemAmount);
+        bar.leave(requiredShares);
 
         uint256 barAfterBalance = bar.balanceOf(address(this));
         uint256 sushiAfterBalance = sushi.balanceOf(address(this));

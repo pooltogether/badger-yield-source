@@ -26,7 +26,7 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
       accounts: {
-        mnemonic: process.env.HDWALLET_MNEMONIC
+        mnemonic: process.env.HDWALLET_MNEMONIC || ""
       }
     }
   },
