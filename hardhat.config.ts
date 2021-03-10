@@ -7,6 +7,7 @@ import "hardhat-typechain";
 import "hardhat-etherscan-abi";
 import "@nomiclabs/hardhat-solhint";
 import "solidity-coverage";
+import 'hardhat-deploy';
 
 // const accounts = {
 //   mnemonic: process.env.MNEMONIC || "test test test test test test test test test test test junk",
@@ -36,7 +37,12 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 60000
-  }
+  },
+  namedAccounts: {
+    deployer: {
+      default: 0
+    }
+  },
 };
 
 export default config;

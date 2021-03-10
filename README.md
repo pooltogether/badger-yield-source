@@ -42,8 +42,9 @@ yarn coverage
 
 # Deployement
 
+In order to deploy to mainnet:
 ```
 export HDWALLET_MNEMONIC=
- npx hardhat run --network NETWORK scripts/deploy.js
+yarn hardhat --network mainnet deploy
 ```
 
