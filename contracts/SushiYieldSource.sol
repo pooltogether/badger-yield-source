@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity >=0.7.0 <0.8.0;
-import {IYieldSource} from "./IYieldSource.sol";
+
+import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "hardhat/console.sol";
 
 interface ISushiBar {
     function enter(uint256 _amount) external;
@@ -43,13 +43,13 @@ contract SushiYieldSource is IYieldSource {
 
     /// @notice Returns the ERC20 asset token used for deposits.
     /// @return The ERC20 asset token
-    function token() public view override returns (address) {
+    function depositToken() public view override returns (address) {
         return (sushiAddr);
     }
 
     /// @notice Returns the total balance (in asset tokens).  This includes the deposits and interest.
     /// @return The underlying balance of asset tokens
-    function balanceOf(address addr) public view override returns (uint256) {
+    function balanceOfToken(address addr) public view override returns (uint256) {
         uint256 shares = ISushiBar(sushiBar).balanceOf(address(this));
         uint256 totalShares = ISushiBar(sushiBar).totalSupply();
         uint256 sushiBalance =
@@ -63,7 +63,7 @@ contract SushiYieldSource is IYieldSource {
     /// @notice Supplies asset tokens to the yield source.
     /// @param mintAmount The amount of asset tokens to be supplied
     /// @param to The account to be credited
-    function supplyTo(uint256 mintAmount, address to) public override {
+    function supplyTokenTo(uint256 mintAmount, address to) public override {
         ISushi(sushiAddr).transferFrom(msg.sender, address(this), mintAmount);
         ISushi(sushiAddr).approve(sushiBar, mintAmount);
 
@@ -78,7 +78,7 @@ contract SushiYieldSource is IYieldSource {
     /// @notice Redeems asset tokens from the yield source.
     /// @param redeemAmount The amount of yield-bearing tokens to be redeemed
     /// @return The actual amount of tokens that were redeemed.
-    function redeem(uint256 redeemAmount) public override returns (uint256) {
+    function redeemToken(uint256 redeemAmount) public override returns (uint256) {
         ISushiBar bar = ISushiBar(sushiBar);
         ISushi sushi = ISushi(sushiAddr);
 
