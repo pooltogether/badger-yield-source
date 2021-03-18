@@ -790,6 +790,18 @@
     deploy-eip-1820 "1.0.0"
     sortition-sum-tree-factory "0.1.0"
 
+"@pooltogether/pooltogether-contracts@https://github.com/pooltogether/pooltogether-pool-contracts.git#pool-1076-change-yieldsourceinterface-so-that-it":
+  version "3.3.4"
+  resolved "https://github.com/pooltogether/pooltogether-pool-contracts.git#7bbc1740dc60c5ece7f9be82c4741c17549b6094"
+  dependencies:
+    "@openzeppelin/contracts-upgradeable" "3.4.0"
+    "@pooltogether/fixed-point" "1.0.0-beta.2"
+    "@pooltogether/pooltogether-rng-contracts" "1.0.0"
+    "@pooltogether/uniform-random-number" "1.0.0-beta.1"
+    "@pooltogether/yield-source-interface" "^1.0.1"
+    deploy-eip-1820 "1.0.0"
+    sortition-sum-tree-factory "0.1.0"
+
 "@pooltogether/pooltogether-rng-contracts@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@pooltogether/pooltogether-rng-contracts/-/pooltogether-rng-contracts-1.0.0.tgz#191d155dc960559cce06b7ec3b0f9ed2caed0f46"

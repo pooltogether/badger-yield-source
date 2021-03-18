@@ -6,9 +6,6 @@ const toWei = ethers.utils.parseEther;
 const { BigNumber } = require("ethers");
 const { deployments } = require("hardhat");
 
-const yieldSourcePrizePoolABI = require("@pooltogether/pooltogether-contracts/abis/YieldSourcePrizePool.json");
-const multipleWinnersABI = require("@pooltogether/pooltogether-contracts/abis/MultipleWinners.json");
-
 async function getEvents(contract, tx) {
   let receipt = await ethers.provider.getTransactionReceipt(tx.hash);
   return receipt.logs.reduce((parsedEvents, log) => {
@@ -31,6 +28,9 @@ describe("SushiYieldSource", function () {
   let yieldSource;
   let sushiBar;
   let exchangeWallet;
+  let yieldSourcePrizePoolABI;
+  let multipleWinnersABI;
+
   before(async function () {
     // deploy all the pool together.
     const TicketProxyFactory = await ethers.getContractFactory("TicketProxyFactory");
@@ -85,6 +85,9 @@ describe("SushiYieldSource", function () {
 
     sushiDecimals = await sushi.decimals();
     factory = await ethers.getContractFactory("SushiYieldSource");
+
+    yieldSourcePrizePoolABI = (await hre.artifacts.readArtifact("YieldSourcePrizePool")).abi;
+    multipleWinnersABI   = (await hre.artifacts.readArtifact("MultipleWinners")).abi;
   });
 
   beforeEach(async function () {
@@ -152,14 +155,12 @@ describe("SushiYieldSource", function () {
   it("should be able to get underlying balance", async function () {
     await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
     let [token] = await prizePool.tokens();
-    console.log("AAAAAAA")
     await prizePool.depositTo(
       wallet.address,
       toWei("100"),
       token,
       wallets[1].address
     );
-    console.log("BBBBBB")
 
     expect(await sushiBar.balanceOf(prizePool.address)) != 0;
   });
