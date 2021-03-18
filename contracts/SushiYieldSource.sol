@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.7.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -49,7 +49,7 @@ contract SushiYieldSource is IYieldSource {
 
     /// @notice Returns the total balance (in asset tokens).  This includes the deposits and interest.
     /// @return The underlying balance of asset tokens
-    function balanceOfToken(address addr) public view override returns (uint256) {
+    function balanceOfToken(address addr) public override returns (uint256) {
         uint256 shares = ISushiBar(sushiBar).balanceOf(address(this));
         uint256 totalShares = ISushiBar(sushiBar).totalSupply();
         uint256 sushiBalance =

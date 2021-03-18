@@ -4,6 +4,7 @@ const { expect } = require("chai");
 const { AddressZero } = ethers.constants;
 const toWei = ethers.utils.parseEther;
 const { BigNumber } = require("ethers");
+const { deployments } = require("hardhat");
 
 const yieldSourcePrizePoolABI = require("@pooltogether/pooltogether-contracts/abis/YieldSourcePrizePool.json");
 const multipleWinnersABI = require("@pooltogether/pooltogether-contracts/abis/MultipleWinners.json");
@@ -31,7 +32,44 @@ describe("SushiYieldSource", function () {
   let sushiBar;
   let exchangeWallet;
   before(async function () {
-    const exchangeWalletAddress = "0xD551234Ae421e3BCBA99A0Da6d736074f22192FF";
+    // deploy all the pool together.
+    const TicketProxyFactory = await ethers.getContractFactory("TicketProxyFactory");
+    const ticketProxyFactory = await TicketProxyFactory.deploy({ gasLimit: 20000000 }); 
+
+    const ControlledTokenProxyFactory = await ethers.getContractFactory("ControlledTokenProxyFactory");
+    const controlledTokenProxyFactory = await ControlledTokenProxyFactory.deploy({ gasLimit: 20000000 }); 
+
+    const ControlledTokenBuilder = await ethers.getContractFactory("ControlledTokenBuilder");
+    const controlledTokenBuilder = await ControlledTokenBuilder.deploy(ticketProxyFactory.address, controlledTokenProxyFactory.address, { gasLimit: 20000000 }); 
+
+    const MultipleWinnersProxyFactory = await ethers.getContractFactory("MultipleWinnersProxyFactory");
+    const multipleWinnersProxyFactory = await MultipleWinnersProxyFactory.deploy({ gasLimit: 20000000 }); 
+
+    const MultipleWinnersBuilder = await ethers.getContractFactory("MultipleWinnersBuilder");
+    const multipleWinnersBuilder = await MultipleWinnersBuilder.deploy(multipleWinnersProxyFactory.address, controlledTokenBuilder.address, { gasLimit: 20000000 }); 
+
+    const StakePrizePoolProxyFactory = await ethers.getContractFactory("StakePrizePoolProxyFactory");
+    const stakePrizePoolProxyFactory = await StakePrizePoolProxyFactory.deploy({ gasLimit: 20000000 }); 
+
+    const YieldSourcePrizePoolProxyFactory = await ethers.getContractFactory("YieldSourcePrizePoolProxyFactory");
+    const yieldSourcePrizePoolProxyFactory = await YieldSourcePrizePoolProxyFactory.deploy({ gasLimit: 20000000 }); 
+
+    const CompoundPrizePoolProxyFactory = await ethers.getContractFactory("CompoundPrizePoolProxyFactory");
+    const compoundPrizePoolProxyFactory = await CompoundPrizePoolProxyFactory.deploy({ gasLimit: 20000000 }); 
+
+    const Registry = await ethers.getContractFactory("Registry");
+    const registry = await Registry.deploy({ gasLimit: 20000000 }); 
+    
+    const PoolWithMultipleWinnersBuilder = await ethers.getContractFactory("PoolWithMultipleWinnersBuilder");
+    poolWithMultipleWinnersBuilder = await PoolWithMultipleWinnersBuilder.deploy(
+      registry.address,
+      compoundPrizePoolProxyFactory.address,
+      yieldSourcePrizePoolProxyFactory.address,
+      stakePrizePoolProxyFactory.address,
+      multipleWinnersBuilder.address,
+      { gasLimit: 9500000 });
+   
+   const exchangeWalletAddress = "0xD551234Ae421e3BCBA99A0Da6d736074f22192FF";
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [exchangeWalletAddress],
@@ -44,9 +82,7 @@ describe("SushiYieldSource", function () {
     sushiBar = await ethers.getVerifiedContractAt(
       "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272"
     );
-    poolWithMultipleWinnersBuilder = await ethers.getVerifiedContractAt(
-      "0xdA64816F76BEA59cde1ecbe5A094F6c56A7F9770"
-    );
+
     sushiDecimals = await sushi.decimals();
     factory = await ethers.getContractFactory("SushiYieldSource");
   });
@@ -110,19 +146,21 @@ describe("SushiYieldSource", function () {
   });
 
   it("get token address", async function () {
-    expect((await yieldSource.token()) == sushi);
+    expect((await yieldSource.depositToken()) == sushi);
   });
 
   it("should be able to get underlying balance", async function () {
     await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
     let [token] = await prizePool.tokens();
-
+    console.log("AAAAAAA")
     await prizePool.depositTo(
       wallet.address,
       toWei("100"),
       token,
       wallets[1].address
     );
+    console.log("BBBBBB")
+
     expect(await sushiBar.balanceOf(prizePool.address)) != 0;
   });
 
