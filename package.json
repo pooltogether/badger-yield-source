@@ -14,6 +14,7 @@
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.32",
     "hardhat": "^2.1.1",
+    "hardhat-dependency-compiler": "^1.1.1",
     "hardhat-deploy": "^0.7.0-beta.47",
     "hardhat-etherscan-abi": "^0.1.1",
     "hardhat-typechain": "^0.3.5",
@@ -26,7 +27,7 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@pooltogether/pooltogether-contracts": "^3.3.2",
+    "@pooltogether/pooltogether-contracts": "https://github.com/pooltogether/pooltogether-pool-contracts.git#pool-1076-change-yieldsourceinterface-so-that-it",
     "@pooltogether/yield-source-interface": "^1.0.1"
   },
   "scripts": {

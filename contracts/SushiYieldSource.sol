@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.7.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
-import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
+import {
+    IYieldSource
+} from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 interface ISushiBar {
@@ -35,11 +37,14 @@ interface ISushi {
 
 contract SushiYieldSource is IYieldSource {
     using SafeMath for uint256;
-    address public sushiBar =
-        address(0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272);
-    address public sushiAddr =
-        address(0x6B3595068778DD592e39A122f4f5a5cF09C90fE2);
+    address public sushiBar;
+    address public sushiAddr;
     mapping(address => uint256) public balances;
+
+    constructor(address _sushiBar, address _sushiAddr) public {
+        sushiBar = _sushiBar;
+        sushiAddr = _sushiAddr;
+    }
 
     /// @notice Returns the ERC20 asset token used for deposits.
     /// @return The ERC20 asset token
@@ -49,7 +54,7 @@ contract SushiYieldSource is IYieldSource {
 
     /// @notice Returns the total balance (in asset tokens).  This includes the deposits and interest.
     /// @return The underlying balance of asset tokens
-    function balanceOfToken(address addr) public view override returns (uint256) {
+    function balanceOfToken(address addr) public override returns (uint256) {
         uint256 shares = ISushiBar(sushiBar).balanceOf(address(this));
         uint256 totalShares = ISushiBar(sushiBar).totalSupply();
         uint256 sushiBalance =
@@ -78,7 +83,11 @@ contract SushiYieldSource is IYieldSource {
     /// @notice Redeems asset tokens from the yield source.
     /// @param redeemAmount The amount of yield-bearing tokens to be redeemed
     /// @return The actual amount of tokens that were redeemed.
-    function redeemToken(uint256 redeemAmount) public override returns (uint256) {
+    function redeemToken(uint256 redeemAmount)
+        public
+        override
+        returns (uint256)
+    {
         ISushiBar bar = ISushiBar(sushiBar);
         ISushi sushi = ISushi(sushiAddr);
 
