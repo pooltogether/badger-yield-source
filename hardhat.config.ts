@@ -31,7 +31,19 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: process.env.HDWALLET_MNEMONIC || ""
       }
-    }
+    },
+    kovan: {
+      url: `https://kovan.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC || ""
+      } 
+    },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC || ""
+      }
+    },
   },
   etherscan: {
     // Your API key for Etherscan

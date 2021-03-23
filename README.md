@@ -46,5 +46,5 @@ In order to deploy to mainnet:
 ```
 export HDWALLET_MNEMONIC=
 yarn hardhat --network mainnet deploy
+yarn hardhat --network mainnet etherscan-verify --api-key $ETHERSCAN_TOKEN
 ```
-
