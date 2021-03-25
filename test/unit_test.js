@@ -1,7 +1,11 @@
 const { ethers, waffle } = require("hardhat");
 const { BigNumber } = require("ethers");
-const { expect, assert } = require("chai");
 const toWei = ethers.utils.parseEther;
+
+const chai = require("chai");
+const { expect } = chai;
+
+chai.use(require("chai-bignumber")());
 
 describe("SushiYieldSource", function () {
   let sushi;
@@ -52,16 +56,24 @@ describe("SushiYieldSource", function () {
     });
   });
 
-  it("get token address", async function () {
-    expect((await yieldSource.depositToken()) == sushi);
-  });
+  // it("get token address", async function () {
+  //   let address = await yieldSource.depositToken()
+  //   expect(address == sushi);
+  // });
 
   it("supplyTokenTo and redeemToken", async function () {
     await sushi.connect(wallet).approve(yieldSource.address, toWei("100"));
     await yieldSource.supplyTokenTo(toWei("100"), wallet.address);
-    expect(await yieldSource.balanceOfToken(wallet.address)) == toWei("100");
+    let balance = await yieldSource.callStatic.balanceOfToken(wallet.address);
+    console.log(balance);
+
+    let amount = toWei("100");
+    expect(balance).to.be.bignumber.equal(amount);
+
     await yieldSource.redeemToken(toWei("100"));
-    expect((await sushi.balanceOf(wallet.address)) == toWei("10000"));
+    balance = await sushi.balanceOf(wallet.address);
+    amount = toWei("10000");
+    expect(balance).to.be.bignumber.equal(amount);
   });
 
   it("prevent funds from being taken by unauthorized", async function () {
@@ -75,7 +87,8 @@ describe("SushiYieldSource", function () {
 
   it("is not affected by token transfered by accident", async function () {
     await sushi.connect(wallet).transfer(yieldSource.address, toWei("100"));
+    let balance = await yieldSource.callStatic.balanceOfToken(wallet.address);
 
-    expect(await yieldSource.balanceOfToken(wallet.address)) == 0;
+    expect(balance).to.be.bignumber.equal(BigNumber.from(0));
   });
 });

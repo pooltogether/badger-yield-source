@@ -1,10 +1,13 @@
 const { ethers, waffle } = require("hardhat");
 const hre = require("hardhat");
-const { expect } = require("chai");
 const { AddressZero } = ethers.constants;
 const toWei = ethers.utils.parseEther;
 const { BigNumber } = require("ethers");
 const { deployments } = require("hardhat");
+const chai = require("chai");
+const { expect } = chai;
+
+chai.use(require("chai-bignumber")());
 
 async function getEvents(contract, tx) {
   let receipt = await ethers.provider.getTransactionReceipt(tx.hash);
@@ -203,7 +206,8 @@ describe("SushiYieldSource integration", function () {
       wallets[1].address
     );
 
-    expect(await sushiBar.balanceOf(prizePool.address)) != 0;
+    const balance = await sushiBar.balanceOf(yieldSource.address);
+    expect(balance).to.be.bignumber.greaterThan(0);
   });
 
   it("should be able to withdraw", async function () {
@@ -216,16 +220,16 @@ describe("SushiYieldSource integration", function () {
       token,
       wallets[1].address
     );
-    expect(await sushiBar.balanceOf(prizePool.address)) != 0;
 
-    const balanceBefore = await sushi.balanceOf(wallet.address);
+    const beforeBalance = await sushi.balanceOf(wallet.address);
     await prizePool.withdrawInstantlyFrom(
       wallet.address,
       toWei("1"),
       token,
       1000
     );
-    expect(await sushiBar.balanceOf(wallet.address)) > balanceBefore;
+    const afterBalance = await sushiBar.balanceOf(wallet.address);
+    expect(afterBalance).to.be.bignumber.greaterThan(beforeBalance);
   });
 
   it("should be able to withdraw all", async function () {
@@ -240,10 +244,10 @@ describe("SushiYieldSource integration", function () {
       token,
       wallets[1].address
     );
+    const deposited = await sushiBar.balanceOf(prizePool.address);
+    expect(deposited).to.be.bignumber.not.equal(BigNumber.from(0));
 
-    expect(await sushiBar.balanceOf(prizePool.address)) != 0;
-
-    hre.network.provider.send("evm_increaseTime", [1000]);
+    hre.network.provider.send("evm_increaseTime", [10]);
 
     await expect(
       prizePool.withdrawInstantlyFrom(wallet.address, toWei("200"), token, 0)
@@ -256,6 +260,37 @@ describe("SushiYieldSource integration", function () {
       0
     );
 
-    expect(await sushi.balanceOf(wallet.address)) == initialBalance;
+    const afterBalance = await sushi.balanceOf(wallet.address);
+
+    expect(afterBalance).to.be.bignumber.equal(initialBalance);
+  });
+
+  it("should not left funds behind", async function () {
+    await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
+
+    let [token] = await prizePool.tokens();
+
+    sushi.connect(wallet).transfer(sushiBar.address, toWei("10"));
+
+    await prizePool.depositTo(
+      wallet.address,
+      toWei("10"),
+      token,
+      wallets[1].address
+    );
+
+    hre.network.provider.send("evm_increaseTime", [10]);
+
+    // Put some gains on the sushiBar pool
+    sushi.connect(wallet).transfer(sushiBar.address, toWei("10"));
+
+    await prizePool.withdrawInstantlyFrom(
+      wallet.address,
+      toWei("10"),
+      token,
+      0
+    );
+    const afterBalance = await sushiBar.balanceOf(yieldSource.address);
+    expect(afterBalance).to.be.bignumber.equal("0");
   });
 });
