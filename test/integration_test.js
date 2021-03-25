@@ -152,7 +152,6 @@ describe("SushiYieldSource integration", function () {
     let decimals = 9;
 
     const multipleWinnersConfig = {
-      proxyAdmin: AddressZero,
       rngService: rngServiceMock.address,
       prizePeriodStart: 0,
       prizePeriodSeconds: 100,
