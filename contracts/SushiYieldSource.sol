@@ -55,46 +55,46 @@ contract SushiYieldSource is IYieldSource {
     /// @notice Returns the total balance (in asset tokens).  This includes the deposits and interest.
     /// @return The underlying balance of asset tokens
     function balanceOfToken(address addr) public override returns (uint256) {
-        uint256 shares = ISushiBar(sushiBar).balanceOf(address(this));
-        uint256 totalShares = ISushiBar(sushiBar).totalSupply();
+        if (balances[addr] == 0) return 0;
+        ISushiBar bar = ISushiBar(sushiBar);
+
+        uint256 shares = bar.balanceOf(address(this));
+        uint256 totalShares = bar.totalSupply();
+
         uint256 sushiBalance =
             shares.mul(ISushi(sushiAddr).balanceOf(address(sushiBar))).div(
                 totalShares
             );
+        uint256 sourceShares = bar.balanceOf(address(this));
 
-        return (balances[addr].mul(sushiBalance).div(totalShares));
+        return (balances[addr].mul(sushiBalance).div(sourceShares));
     }
 
-    /// @notice Supplies asset tokens to the yield source.
-    /// @param mintAmount The amount of asset tokens to be supplied
-    /// @param to The account to be credited
-    function supplyTokenTo(uint256 mintAmount, address to) public override {
-        ISushi(sushiAddr).transferFrom(msg.sender, address(this), mintAmount);
-        ISushi(sushiAddr).approve(sushiBar, mintAmount);
+    /// @notice Supplies tokens to the yield source.  Allows assets to be supplied on other user's behalf using the `to` param.
+    /// @param amount The amount of `token()` to be supplied
+    /// @param to The user whose balance will receive the tokens
+    function supplyTokenTo(uint256 amount, address to) public override {
+        ISushi(sushiAddr).transferFrom(msg.sender, address(this), amount);
+        ISushi(sushiAddr).approve(sushiBar, amount);
 
         ISushiBar bar = ISushiBar(sushiBar);
         uint256 beforeBalance = bar.balanceOf(address(this));
-        bar.enter(mintAmount);
+        bar.enter(amount);
         uint256 afterBalance = bar.balanceOf(address(this));
         uint256 balanceDiff = afterBalance.sub(beforeBalance);
         balances[to] = balances[to].add(balanceDiff);
     }
 
-    /// @notice Redeems asset tokens from the yield source.
-    /// @param redeemAmount The amount of yield-bearing tokens to be redeemed
+    /// @notice Redeems tokens from the yield source.
+    /// @param amount The amount of `token()` to withdraw.  Denominated in `token()` as above.
     /// @return The actual amount of tokens that were redeemed.
-    function redeemToken(uint256 redeemAmount)
-        public
-        override
-        returns (uint256)
-    {
+    function redeemToken(uint256 amount) public override returns (uint256) {
         ISushiBar bar = ISushiBar(sushiBar);
         ISushi sushi = ISushi(sushiAddr);
 
         uint256 totalShares = bar.totalSupply();
         uint256 barSushiBalance = sushi.balanceOf(address(bar));
-        uint256 requiredShares =
-            redeemAmount.mul(totalShares).div(barSushiBalance);
+        uint256 requiredShares = amount.mul(totalShares).div(barSushiBalance);
 
         uint256 barBeforeBalance = bar.balanceOf(address(this));
         uint256 sushiBeforeBalance = sushi.balanceOf(address(this));
