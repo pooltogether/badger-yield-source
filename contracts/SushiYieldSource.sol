@@ -18,13 +18,11 @@ contract SushiYieldSource is IYieldSource {
         sushiBar = _sushiBar;
         sushiAddr = _sushiAddr;
     }
-    /// @title Token used for deposit
     /// @notice Returns the ERC20 asset token used for deposits.
     /// @return The ERC20 asset token
     function depositToken() public view override returns (address) {
         return (sushiAddr);
     }
-    /// @title balance of underlying token
     /// @notice Returns the total balance (in asset tokens).  This includes the deposits and interest.
     /// @return The underlying balance of asset tokens
     function balanceOfToken(address addr) public override returns (uint256) {
@@ -42,7 +40,6 @@ contract SushiYieldSource is IYieldSource {
 
         return (balances[addr].mul(sushiBalance).div(sourceShares));
     }
-    /// @title Supplies tokens to the yield source
     /// @notice Allows assets to be supplied on other user's behalf using the `to` param.
     /// @param amount The amount of `token()` to be supplied
     /// @param to The user whose balance will receive the tokens
@@ -57,7 +54,6 @@ contract SushiYieldSource is IYieldSource {
         uint256 balanceDiff = afterBalance.sub(beforeBalance);
         balances[to] = balances[to].add(balanceDiff);
     }
-    /// @title Redeems tokens from the yield source.
     /// @notice Redeems tokens from the yield source from the msg.sender, it burn yield bearing tokens and return token to the sender.
     /// @param amount The amount of `token()` to withdraw.  Denominated in `token()` as above.
     /// @return The actual amount of tokens that were redeemed.

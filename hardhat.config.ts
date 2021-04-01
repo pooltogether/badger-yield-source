@@ -1,7 +1,7 @@
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-import { HardhatUserConfig } from "hardhat/types";
+import { HardhatUserConfig, HardhatNetworkUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
 import "hardhat-etherscan-abi";
@@ -14,6 +14,19 @@ import 'hardhat-dependency-compiler';
 //   mnemonic: process.env.MNEMONIC || "test test test test test test test test test test test junk",
 //   accountsBalance: "990000000000000000000",
 // }
+
+let hardhat:HardhatNetworkUserConfig = {
+  blockGasLimit: 20000000,
+  allowUnlimitedContractSize: true,
+  chainId: 1,
+}
+
+if (process.env.FORK_MAINNET) {
+  hardhat = {forking: {
+    url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
+  },
+    ...hardhat}
+}
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -28,14 +41,7 @@ const config: HardhatUserConfig = {
   },
 
   networks: {
-    hardhat: {
-      forking: {
-        url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
-      },
-      blockGasLimit: 20000000,
-      allowUnlimitedContractSize: true,
-        chainId: 1,
-    },
+    hardhat,
     mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
       accounts: {

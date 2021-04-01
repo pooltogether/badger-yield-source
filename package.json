@@ -36,11 +36,12 @@
     "build": "hardhat compile",
     "console": "hardhat console",
     "verify": "yarn hint && yarn test",
-    "test": "yarn hardhat test --network hardhat",
+    "test:integration": "FORK_MAINNET=true yarn hardhat test --network hardhat",
+    "test": "yarn hardhat test --network hardhat test/unit_test.js",
     "lint": "yarn solhint 'contracts/**/*.sol' && yarn prettier -c './**/*.js'",
     "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js",
     "hint": "solhint \"contracts/**/*.sol\"",
-    "coverage": "yarn hardhat coverage  --testfiles \"test/*.js\"",
+    "coverage": "FORK_MAINNET=true yarn hardhat coverage  --testfiles \"test/*.js\"",
     "coverage:file": "yarn hardhat coverage --testfiles"
   }
 }
