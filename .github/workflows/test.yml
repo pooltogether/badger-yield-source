@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  unit-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -42,8 +42,8 @@ jobs:
 
     - name: Run coverage
       env:
-        ETHERSCAN_TOKEN: MW5CQA6QK5YMJXP2WP3RA36HM5A7RA1IHA
-        WEB3_INFURA_PROJECT_ID: b7821200399e4be2b4e5dbdf06fbe85b
+        ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
+        WEB3_INFURA_PROJECT_ID: ${{ secrets.WEB3_INFURA_PROJECT_ID }}
       run: yarn coverage
     - name: Coveralls
       uses: coverallsapp/github-action@master
