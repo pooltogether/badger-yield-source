@@ -1,3 +1,4 @@
+[![Coverage Status](https://coveralls.io/repos/github/steffenix/sushi-pooltogether/badge.svg?branch=master)](https://coveralls.io/github/steffenix/sushi-pooltogether?branch=master)
 # Install project
 
 ```
