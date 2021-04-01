@@ -6,34 +6,8 @@ import {
     IYieldSource
 } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-
-interface ISushiBar {
-    function enter(uint256 _amount) external;
-
-    function leave(uint256 _share) external;
-
-    function totalSupply() external view returns (uint256);
-
-    function balanceOf(address account) external view returns (uint256);
-
-    function transfer(address recipient, uint256 amount)
-        external
-        returns (bool);
-}
-
-interface ISushi {
-    function balanceOf(address account) external view returns (uint256);
-
-    function transferFrom(
-        address from,
-        address account,
-        uint256 amount
-    ) external returns (bool);
-
-    function transfer(address account, uint256 amount) external returns (bool);
-
-    function approve(address spender, uint256 amount) external returns (bool);
-}
+import "./ISushiBar.sol";
+import "./ISushi.sol";
 
 contract SushiYieldSource is IYieldSource {
     using SafeMath for uint256;

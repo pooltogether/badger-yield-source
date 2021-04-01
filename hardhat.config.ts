@@ -16,7 +16,17 @@ import 'hardhat-dependency-compiler';
 // }
 
 const config: HardhatUserConfig = {
-  solidity: "0.6.12",
+  solidity: {
+    version: "0.6.12",
+    settings: {
+      outputSelection: {
+        "*": {
+            "*": ["storageLayout"],
+        },
+      },
+    }
+  },
+
   networks: {
     hardhat: {
       forking: {
@@ -74,12 +84,12 @@ const config: HardhatUserConfig = {
     },
     sushiBar: {
       "mainnet": "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272",
-      "kovan": "0x1be211D8DA40BC0ae8719c6663307Bfc987b1d6c",
+      "kovan": "0xe665b9c01ac0fc4191c6193531e54d095eefa8ac",
       "rinkeby": "0x1be211D8DA40BC0ae8719c6663307Bfc987b1d6c",
     },
     sushiToken: {
       "mainnet": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
-      "kovan": "0x0769fd68dFb93167989C6f7254cd0D766Fb2841F", 
+      "kovan": "0xc2a7e01df02f429fdc45e655bba5f158406455a6", 
       "rinkeby": "0x0769fd68dFb93167989C6f7254cd0D766Fb2841F",
     }
   },
