@@ -45,3 +45,7 @@ jobs:
         ETHERSCAN_TOKEN: MW5CQA6QK5YMJXP2WP3RA36HM5A7RA1IHA
         WEB3_INFURA_PROJECT_ID: b7821200399e4be2b4e5dbdf06fbe85b
       run: yarn coverage
+    - name: install coveralls
+      run: yarn global add coveralls
+    - name: upload to coveralls
+      run: cat coverage/lcov.info | coveralls

@@ -41,4 +41,4 @@ jobs:
       run: yarn --frozen-lockfile
 
     - name: Run linter on *.sol and *.json
-      run: yarn lint:check
+      run: yarn lint
