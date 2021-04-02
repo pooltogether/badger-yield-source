@@ -85,12 +85,43 @@ describe("SushiYieldSource", function () {
 
     yieldSource.smodify.put({
       balances: {
-        [wallet.address]: 1000,
-        [wallets[1].address]: 1000,
+        [wallet.address]: amount,
+        [wallets[1].address]: amount,
       },
     });
     expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
       BigNumber.from(amount).mul(12).div(10)
     );
+  });
+
+  it("deposit, sushi accrues, withdrawal", async function () {
+    // User deposit into the yield source
+    amount = 10000;
+    await sushiBar.mock.totalSupply.returns(amount * 100);
+    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount * 100);
+    // 1xsushi = 1 sushi
+    yieldSource.smodify.put({
+      balances: {
+        [wallet.address]: amount,
+        [wallets[1].address]: amount,
+      },
+    });
+
+    await sushiBar.mock.balanceOf
+      .withArgs(yieldSource.address)
+      .returns(amount * 2);
+    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+      BigNumber.from(amount)
+    );
+    // SushiBar value increase by 20%, 1xsushi = 1 sushi
+    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount * 120);
+    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+      BigNumber.from(amount).mul(12).div(10)
+    );
+    await sushi.mock.balanceOf.withArgs(yieldSource.address).returns(0);
+    await sushiBar.mock.leave.withArgs(amount).returns();
+    await sushi.mock.transfer.withArgs(wallet.address, 0).returns(0);
+
+    await yieldSource.redeemToken(amount * 1.2);
   });
 });
