@@ -1,13 +1,14 @@
 const { ethers } = require("hardhat");
-const toWei = ethers.utils.parseEther;
-
-const chai = require("chai");
-const { expect } = chai;
-const { smoddit } = require("@eth-optimism/smock");
-
-chai.use(require("chai-bignumber")());
-
+const { solidity } = require("ethereum-waffle");
 const { deployMockContract } = require("ethereum-waffle");
+const { smoddit } = require("@eth-optimism/smock");
+const chai = require("chai");
+const { BigNumber } = require("ethers");
+
+chai.use(solidity);
+const toWei = ethers.utils.parseEther;
+const { expect } = chai;
+
 let overrides = { gasLimit: 9500000 };
 
 describe("SushiYieldSource", function () {
@@ -71,18 +72,25 @@ describe("SushiYieldSource", function () {
   it("call balanceOfToken", async function () {
     amount = 1000;
 
-    await yieldSource.balanceOfToken(wallet.address);
+    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+      0
+    );
 
-    await sushiBar.mock.totalSupply.returns(amount);
-    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount);
-    await sushiBar.mock.balanceOf.withArgs(yieldSource.address).returns(amount);
+    await sushiBar.mock.totalSupply.returns(amount * 100);
+    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount * 120);
+    // 1xSushi = 1.2 sushi
+    await sushiBar.mock.balanceOf
+      .withArgs(yieldSource.address)
+      .returns(amount * 2);
 
     yieldSource.smodify.put({
       balances: {
         [wallet.address]: 1000,
+        [wallets[1].address]: 1000,
       },
     });
-
-    await yieldSource.balanceOfToken(wallet.address);
+    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+      BigNumber.from(amount).mul(12).div(10)
+    );
   });
 });

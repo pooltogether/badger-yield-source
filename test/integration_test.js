@@ -205,8 +205,10 @@ describe("SushiYieldSource integration", function () {
       wallets[1].address
     );
 
-    const balance = await sushiBar.balanceOf(yieldSource.address);
-    expect(balance).to.be.above(0);
+    expect(
+      await yieldSource.callStatic.balanceOfToken(prizePool.address)
+    ).to.be.closeTo(toWei("100"), 1);
+    expect(await sushiBar.balanceOf(yieldSource.address)).to.be.above(0);
   });
 
   it("should be able to withdraw", async function () {
