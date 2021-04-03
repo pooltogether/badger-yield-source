@@ -1,9 +1,6 @@
 const { ethers } = require("hardhat");
 const { solidity } = require("ethereum-waffle");
-const { deployMockContract } = require("ethereum-waffle");
-const { smoddit } = require("@eth-optimism/smock");
 const chai = require("chai");
-const { BigNumber } = require("ethers");
 
 chai.use(solidity);
 const toWei = ethers.utils.parseEther;
@@ -15,30 +12,39 @@ describe("SushiYieldSource", function () {
   let sushi;
   let sushiBar;
   let wallet;
-  let wallets;
+  let wallet2;
   let yieldSource;
-
-  before(async function () {
-    wallets = await ethers.getSigners();
-    wallet = wallets[0];
-  });
+  let amount;
 
   beforeEach(async function () {
-    wallets = await ethers.getSigners();
-    wallet = wallets[0];
+    [wallet, wallet2] = await ethers.getSigners();
+    const ERC20MintableContract = await hre.ethers.getContractFactory(
+      "ERC20Mintable",
+      wallet,
+      overrides
+    );
+    sushi = await ERC20MintableContract.deploy("Sushi", "SUSHI");
 
-    const ISUSHI = await hre.artifacts.readArtifact("ISushi");
-    sushi = await deployMockContract(wallet, ISUSHI.abi, overrides);
+    const SushiBarContract = await hre.ethers.getContractFactory(
+      "SushiBar",
+      wallet,
+      overrides
+    );
+    sushiBar = await SushiBarContract.deploy(sushi.address);
 
-    const ISUSHIBAR = await hre.artifacts.readArtifact("ISushiBar");
-    sushiBar = await deployMockContract(wallet, ISUSHIBAR.abi, overrides);
-    let factory = await smoddit("SushiYieldSource");
-
-    yieldSource = await factory.deploy(
+    const SushiYieldSourceContract = await ethers.getContractFactory(
+      "SushiYieldSource"
+    );
+    yieldSource = await SushiYieldSourceContract.deploy(
       sushiBar.address,
       sushi.address,
       overrides
     );
+    amount = toWei("100");
+    await sushi.mint(wallet.address, amount);
+    await sushi.mint(wallet2.address, amount.mul(99));
+    await sushi.connect(wallet2).approve(sushiBar.address, amount.mul(99));
+    await sushiBar.connect(wallet2).enter(amount.mul(99));
   });
 
   it("get token address", async function () {
@@ -46,82 +52,48 @@ describe("SushiYieldSource", function () {
     expect(address == sushi);
   });
 
-  it("supplyTokenTo and redeemToken", async function () {
-    amount = toWei("100");
-    // Supply
-    await sushi.mock.transferFrom
-      .withArgs(wallet.address, yieldSource.address, amount)
-      .returns(true);
-    await sushi.mock.approve.withArgs(sushiBar.address, amount).returns(true);
-    await sushiBar.mock.balanceOf.withArgs(yieldSource.address).returns(0);
-    await sushiBar.mock.enter.withArgs(amount).returns();
-    await sushiBar.mock.balanceOf.withArgs(yieldSource.address).returns(amount);
-    await yieldSource.supplyTokenTo(amount, wallet.address);
-
-    // redeem
-    await sushiBar.mock.totalSupply.returns(amount);
-    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount);
-    await sushi.mock.balanceOf.withArgs(yieldSource.address).returns(0);
-    await sushiBar.mock.balanceOf.withArgs(yieldSource.address).returns(amount);
-    await sushiBar.mock.leave.withArgs(amount).returns();
-    await sushi.mock.balanceOf.withArgs(yieldSource.address).returns(amount); // Doesn't seems to work, would need some method to mockOnce.
-    await sushiBar.mock.balanceOf.withArgs(yieldSource.address).returns(0);
-    await sushi.mock.transfer.withArgs(wallet.address, 0).returns(true);
-    await yieldSource.redeemToken(amount);
-  });
-  it("call balanceOfToken", async function () {
-    amount = 1000;
-
+  it("balanceOfToken", async function () {
     expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
       0
     );
 
-    await sushiBar.mock.totalSupply.returns(amount * 100);
-    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount * 120);
-    // 1xSushi = 1.2 sushi
-    await sushiBar.mock.balanceOf
-      .withArgs(yieldSource.address)
-      .returns(amount * 2);
-
-    yieldSource.smodify.put({
-      balances: {
-        [wallet.address]: amount,
-        [wallets[1].address]: amount,
-      },
-    });
+    await sushi.connect(wallet).approve(yieldSource.address, amount);
+    await yieldSource.supplyTokenTo(amount, wallet.address);
     expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
-      BigNumber.from(amount).mul(12).div(10)
+      amount
     );
   });
 
+  it("supplyTokenTo", async function () {
+    await sushi.connect(wallet).approve(yieldSource.address, amount);
+    await yieldSource.supplyTokenTo(amount, wallet.address);
+    expect(await sushi.balanceOf(sushiBar.address)).to.eq(amount.mul(100));
+    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+      amount
+    );
+  });
+
+  it("redeemToken", async function () {
+    await sushi.connect(wallet).approve(yieldSource.address, amount);
+    await yieldSource.supplyTokenTo(amount, wallet.address);
+
+    expect(await sushi.balanceOf(wallet.address)).to.eq(0);
+    await yieldSource.redeemToken(amount);
+    expect(await sushi.balanceOf(wallet.address)).to.eq(amount);
+  });
+
   it("deposit, sushi accrues, withdrawal", async function () {
-    // User deposit into the yield source
-    amount = 10000;
-    await sushiBar.mock.totalSupply.returns(amount * 100);
-    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount * 100);
-    // 1xsushi = 1 sushi
-    yieldSource.smodify.put({
-      balances: {
-        [wallet.address]: amount,
-        [wallets[1].address]: amount,
-      },
-    });
-
-    await sushiBar.mock.balanceOf
-      .withArgs(yieldSource.address)
-      .returns(amount * 2);
+    await sushi.connect(wallet).approve(yieldSource.address, amount);
+    await yieldSource.supplyTokenTo(amount, wallet.address);
+    // increase total balance by 1%
+    await sushi.mint(sushiBar.address, amount);
     expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
-      BigNumber.from(amount)
+      amount.mul(101).div(100)
     );
-    // SushiBar value increase by 20%, 1xsushi = 1 sushi
-    await sushi.mock.balanceOf.withArgs(sushiBar.address).returns(amount * 120);
-    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
-      BigNumber.from(amount).mul(12).div(10)
-    );
-    await sushi.mock.balanceOf.withArgs(yieldSource.address).returns(0);
-    await sushiBar.mock.leave.withArgs(amount).returns();
-    await sushi.mock.transfer.withArgs(wallet.address, 0).returns(0);
 
-    await yieldSource.redeemToken(amount * 1.2);
+    await yieldSource.redeemToken(amount.mul(101).div(100));
+    expect(await sushi.balanceOf(wallet.address)).to.eq(
+      amount.mul(101).div(100)
+    );
   });
 });
