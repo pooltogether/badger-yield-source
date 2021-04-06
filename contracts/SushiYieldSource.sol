@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.6.0 <0.7.0;
+pragma solidity 0.6.12;
 
-import {
-    IYieldSource
-} from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
+import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./ISushiBar.sol";
 import "./ISushi.sol";
