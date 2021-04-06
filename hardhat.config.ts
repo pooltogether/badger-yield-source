@@ -15,17 +15,20 @@ import 'hardhat-dependency-compiler';
 //   accountsBalance: "990000000000000000000",
 // }
 
-let hardhat:HardhatNetworkUserConfig = {
+let hardhat: HardhatNetworkUserConfig = {
   blockGasLimit: 20000000,
   allowUnlimitedContractSize: true,
   chainId: 1,
 }
 
 if (process.env.FORK_MAINNET) {
-  hardhat = {forking: {
-    url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
-  },
-    ...hardhat}
+  console.log("Using mainnet fork")
+  hardhat = {
+    forking: {
+      url: `https://mainnet.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
+    },
+    ...hardhat
+  }
 }
 
 const config: HardhatUserConfig = {
@@ -34,7 +37,7 @@ const config: HardhatUserConfig = {
     settings: {
       outputSelection: {
         "*": {
-            "*": ["storageLayout"],
+          "*": ["storageLayout"],
         },
       },
     }
@@ -52,7 +55,7 @@ const config: HardhatUserConfig = {
       url: `https://kovan.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
       accounts: {
         mnemonic: process.env.HDWALLET_MNEMONIC || ""
-      } 
+      }
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.WEB3_INFURA_PROJECT_ID}`,
@@ -60,6 +63,11 @@ const config: HardhatUserConfig = {
         mnemonic: process.env.HDWALLET_MNEMONIC || ""
       }
     },
+    localhost: {
+      chainId: 1,
+      url: 'http://127.0.0.1:8545',
+      allowUnlimitedContractSize: true
+    }
   },
   etherscan: {
     // Your API key for Etherscan
@@ -83,7 +91,7 @@ const config: HardhatUserConfig = {
       "@pooltogether/pooltogether-contracts/contracts/token/TicketProxyFactory.sol",
     ]
   },
-  
+
   namedAccounts: {
     deployer: {
       default: 0
@@ -95,7 +103,7 @@ const config: HardhatUserConfig = {
     },
     sushiToken: {
       "mainnet": "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
-      "kovan": "0xc2a7e01df02f429fdc45e655bba5f158406455a6", 
+      "kovan": "0xc2a7e01df02f429fdc45e655bba5f158406455a6",
       "rinkeby": "0x0769fd68dFb93167989C6f7254cd0D766Fb2841F",
     }
   },

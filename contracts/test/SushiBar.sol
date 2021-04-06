@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 // SushiBar is the coolest bar in town. You come in with some Sushi, and leave with more! The longer you stay, the more Sushi you get.
 //
 // This contract handles swapping to and from xSushi, SushiSwap's staking token.
-contract SushiBar is ERC20("SushiBar", "xSUSHI"){
+contract SushiBar is ERC20("SushiBar", "xSUSHI") {
     using SafeMath for uint256;
     IERC20 public sushi;
 
@@ -29,8 +29,10 @@ contract SushiBar is ERC20("SushiBar", "xSUSHI"){
         if (totalShares == 0 || totalSushi == 0) {
             _mint(msg.sender, _amount);
         } 
-        // Calculate and mint the amount of xSushi the Sushi is worth. The ratio will change overtime, as xSushi is burned/minted and Sushi deposited + gained from fees / withdrawn.
-        else {
+        // Calculate and mint the amount of xSushi the Sushi is worth. The ratio will change overtime, as xSushi 
+        // is burned/minted and Sushi deposited + gained from fees / withdrawn.
+        else 
+        {
             uint256 what = _amount.mul(totalShares).div(totalSushi);
             _mint(msg.sender, what);
         }

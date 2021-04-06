@@ -13,7 +13,7 @@
     "@types/node": "^14.14.32",
     "chai-bignumber": "^3.0.0",
     "ethereum-waffle": "^3.3.0",
-    "ethers": "^5.0.32",
+    "ethers": "^5.1.0",
     "hardhat": "^2.1.1",
     "hardhat-dependency-compiler": "^1.1.1",
     "hardhat-deploy": "^0.7.0-beta.47",
@@ -28,7 +28,7 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@pooltogether/pooltogether-contracts": "3.3.6",
+    "@pooltogether/pooltogether-contracts": "3.3.7",
     "@pooltogether/yield-source-interface": "^1.0.1"
   },
   "scripts": {
@@ -41,6 +41,8 @@
     "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js",
     "hint": "solhint \"contracts/**/*.sol\"",
     "coverage": "FORK_MAINNET=true yarn hardhat coverage  --testfiles \"test/*.js\"",
-    "coverage:file": "yarn hardhat coverage --testfiles"
+    "coverage:file": "yarn hardhat coverage --testfiles",
+    "start-fork": "FORK_MAINNET=true hardhat node --no-reset --no-deploy",
+    "fork-run": "hardhat run --network localhost"
   }
 }
