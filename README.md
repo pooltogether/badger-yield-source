@@ -1,4 +1,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/steffenix/sushi-pooltogether/badge.svg?branch=master)](https://coveralls.io/github/steffenix/sushi-pooltogether?branch=master)
+![Tests](https://github.com/steffenix/sushi-pooltogether/actions/workflows/test.yml/badge.svg)
+![Linting](https://github.com/steffenix/sushi-pooltogether/actions/workflows/lint.yml/badge.svg)
+
 # Install project
 
 ```
