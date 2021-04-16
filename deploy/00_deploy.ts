@@ -6,6 +6,14 @@ const func: DeployFunction =  async (hre: HardhatRuntimeEnvironment) => {
   const {deploy} = deployments;
   const {deployer, sushiBar, sushiToken} = await getNamedAccounts();
 
+  if (!sushiBar) {
+    throw new Error('sushiBar must be defined as a named account')
+  }
+  
+  if (!sushiToken) {
+    throw new Error('sushiToken must be defined as a named account')
+  }
+
   console.time("SushiYieldSource deployed");
   const contract = await deploy('SushiYieldSource', {
     from: deployer,
