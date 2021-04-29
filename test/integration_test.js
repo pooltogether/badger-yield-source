@@ -207,7 +207,7 @@ describe("SushiYieldSource integration", function () {
 
     expect(
       await yieldSource.callStatic.balanceOfToken(prizePool.address)
-    ).to.be.closeTo(toWei("100"), 1);
+    ).to.be.closeTo(toWei("100"), 10);
     expect(await sushiBar.balanceOf(yieldSource.address)).to.be.above(0);
   });
 
@@ -265,7 +265,7 @@ describe("SushiYieldSource integration", function () {
 
     expect(await sushi.balanceOf(wallet.address)).to.be.closeTo(
       initialBalance,
-      1
+      10
     );
   });
 
