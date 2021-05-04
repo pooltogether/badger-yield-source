@@ -19,19 +19,40 @@ describe('BadgerYieldSource', function () {
 
   beforeEach(async function () {
     [wallet, wallet2] = await ethers.getSigners();
-    const ERC20MintableContract = await hre.ethers.getContractFactory(
+    const ERC20MintableContract = await ethers.getContractFactory(
       'ERC20Mintable',
       wallet,
       overrides
     );
     badger = await ERC20MintableContract.deploy('Badger', 'BADGER');
 
-    const BadgerSettContract = await hre.ethers.getContractFactory(
+    const BadgerSettContract = await ethers.getContractFactory(
       'BadgerSett',
       wallet,
       overrides
     );
-    badgerSett = await BadgerSettContract.deploy(badger.address);
+    badgerSett = await BadgerSettContract.deploy();
+    const burnAddr = '0x' + '0'.repeat(40);
+    // const token = badger.address;
+    // const governance = badger.deployer;
+    // const guardian = badger.guardian;
+    // const keeper = badger.deployer;
+    // const controller = badger.getController('native');
+    const token = badger.address;
+    const governance = burnAddr;
+    const guardian = burnAddr;
+    const keeper = burnAddr;
+    const controller = burnAddr;
+    await badgerSett.initialize(
+      token,
+      controller,
+      governance,
+      keeper,
+      guardian,
+      true,
+      'Badger Sett Badger',
+      'bBADGER'
+    );
 
     const BadgerYieldSourceContract = await ethers.getContractFactory(
       'BadgerYieldSource'
@@ -45,10 +66,10 @@ describe('BadgerYieldSource', function () {
     await badger.mint(wallet.address, amount);
     await badger.mint(wallet2.address, amount.mul(99));
     await badger.connect(wallet2).approve(badgerSett.address, amount.mul(99));
-    await badgerSett.connect(wallet2).enter(amount.mul(99));
+    await badgerSett.connect(wallet2).deposit(amount.mul(99));
   });
 
-  it('get token address', async function () {
+  it.only('get token address', async function () {
     let address = await yieldSource.depositToken();
     expect(address == badger);
   });
