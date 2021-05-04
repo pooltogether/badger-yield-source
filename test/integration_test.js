@@ -18,9 +18,9 @@ async function getEvents(contract, tx) {
   }, []);
 }
 
-describe("SushiYieldSource integration", function () {
-  let sushi;
-  let sushiDecimals;
+describe("BadgerYieldSource integration", function () {
+  let badger;
+  let badgerDecimals;
   let poolWithMultipleWinnersBuilder;
   let factory;
   let prizePool;
@@ -28,7 +28,7 @@ describe("SushiYieldSource integration", function () {
   let wallet;
   let wallets;
   let yieldSource;
-  let sushiBar;
+  let badgerSett;
   let exchangeWallet;
   let yieldSourcePrizePoolABI;
   let multipleWinnersABI;
@@ -116,16 +116,16 @@ describe("SushiYieldSource integration", function () {
       params: [exchangeWalletAddress],
     });
     exchangeWallet = await waffle.provider.getSigner(exchangeWalletAddress);
-    sushi = await ethers.getVerifiedContractAt(
+    badger = await ethers.getVerifiedContractAt(
       "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
       exchangeWallet
     );
-    sushiBar = await ethers.getVerifiedContractAt(
+    badgerSett = await ethers.getVerifiedContractAt(
       "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272"
     );
 
-    sushiDecimals = await sushi.decimals();
-    factory = await ethers.getContractFactory("SushiYieldSource");
+    badgerDecimals = await badger.decimals();
+    factory = await ethers.getContractFactory("BadgerYieldSource");
 
     yieldSourcePrizePoolABI = (
       await hre.artifacts.readArtifact("YieldSourcePrizePool")
@@ -157,10 +157,10 @@ describe("SushiYieldSource integration", function () {
       rngService: rngServiceMock.address,
       prizePeriodStart: 0,
       prizePeriodSeconds: 100,
-      ticketName: "sushipass",
-      ticketSymbol: "suship",
-      sponsorshipName: "sushisponso",
-      sponsorshipSymbol: "sushisp",
+      ticketName: "badgerpass",
+      ticketSymbol: "badgerp",
+      sponsorshipName: "badgersponso",
+      sponsorshipSymbol: "badgersp",
       ticketCreditLimitMantissa: toWei("0.1"),
       ticketCreditRateMantissa: toWei("0.1"),
       externalERC20Awards: [],
@@ -188,15 +188,15 @@ describe("SushiYieldSource integration", function () {
       wallet
     );
 
-    // get some sushi
-    await sushi.transfer(
+    // get some badger
+    await badger.transfer(
       wallet.address,
-      BigNumber.from(1000).mul(BigNumber.from(10).pow(sushiDecimals))
+      BigNumber.from(1000).mul(BigNumber.from(10).pow(badgerDecimals))
     );
   });
 
   it("should be able to get underlying balance", async function () {
-    await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
+    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
     let [token] = await prizePool.tokens();
     await prizePool.depositTo(
       wallet.address,
@@ -208,11 +208,11 @@ describe("SushiYieldSource integration", function () {
     expect(
       await yieldSource.callStatic.balanceOfToken(prizePool.address)
     ).to.be.closeTo(toWei("100"), 10);
-    expect(await sushiBar.balanceOf(yieldSource.address)).to.be.above(0);
+    expect(await badgerSett.balanceOf(yieldSource.address)).to.be.above(0);
   });
 
   it("should be able to withdraw", async function () {
-    await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
+    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
     let [token] = await prizePool.tokens();
 
     await prizePool.depositTo(
@@ -222,7 +222,7 @@ describe("SushiYieldSource integration", function () {
       wallets[1].address
     );
 
-    const beforeBalance = await sushi.balanceOf(wallet.address);
+    const beforeBalance = await badger.balanceOf(wallet.address);
     await prizePool.withdrawInstantlyFrom(
       wallet.address,
       toWei("1"),
@@ -230,14 +230,14 @@ describe("SushiYieldSource integration", function () {
       1000
     );
 
-    expect(await sushi.balanceOf(wallet.address)).to.be.above(beforeBalance);
+    expect(await badger.balanceOf(wallet.address)).to.be.above(beforeBalance);
   });
 
   it("should be able to withdraw all", async function () {
-    await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
+    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
     let [token] = await prizePool.tokens();
 
-    const initialBalance = await sushi.balanceOf(wallet.address);
+    const initialBalance = await badger.balanceOf(wallet.address);
 
     await prizePool.depositTo(
       wallet.address,
@@ -246,7 +246,7 @@ describe("SushiYieldSource integration", function () {
       wallets[1].address
     );
 
-    expect(await sushiBar.balanceOf(yieldSource.address)).to.not.equal(
+    expect(await badgerSett.balanceOf(yieldSource.address)).to.not.equal(
       BigNumber.from(0)
     );
 
@@ -263,18 +263,18 @@ describe("SushiYieldSource integration", function () {
       0
     );
 
-    expect(await sushi.balanceOf(wallet.address)).to.be.closeTo(
+    expect(await badger.balanceOf(wallet.address)).to.be.closeTo(
       initialBalance,
       10
     );
   });
 
   it("should not left funds behind", async function () {
-    await sushi.connect(wallet).approve(prizePool.address, toWei("100"));
+    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
 
     let [token] = await prizePool.tokens();
 
-    sushi.connect(wallet).transfer(sushiBar.address, toWei("10"));
+    badger.connect(wallet).transfer(badgerSett.address, toWei("10"));
 
     await prizePool.depositTo(
       wallet.address,
@@ -291,7 +291,7 @@ describe("SushiYieldSource integration", function () {
       token,
       0
     );
-    expect(await sushiBar.balanceOf(yieldSource.address)).to.equal(
+    expect(await badgerSett.balanceOf(yieldSource.address)).to.equal(
       BigNumber.from(0)
     );
   });

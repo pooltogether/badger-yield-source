@@ -2,10 +2,10 @@
 
 pragma solidity >=0.6.0 <0.7.0;
 
-interface ISushiBar {
-    function enter(uint256 _amount) external;
+interface IBadgerSett {
+    function deposit(uint256 _amount) external;
 
-    function leave(uint256 _share) external;
+    function withdraw(uint256 _shares) external;
 
     function totalSupply() external view returns (uint256);
 

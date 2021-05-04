@@ -1,5 +1,5 @@
 {
-  "name": "aave-yield-source-spec",
+  "name": "badger-sett-pooltogether",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -37,9 +37,9 @@
     "verify": "yarn hint && yarn test",
     "test:integration": "FORK_MAINNET=true yarn hardhat test --network hardhat",
     "test": "yarn hardhat test --network hardhat test/unit_test.js",
-    "lint": "yarn solhint 'contracts/SushiYieldSource.sol' && yarn prettier -c './**/*.js'",
+    "lint": "yarn solhint 'contracts/BadgerYieldSource.sol' && yarn prettier -c './**/*.js'",
     "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js",
-    "hint": "solhint \"contracts/SushiYieldSource.sol\"",
+    "hint": "solhint \"contracts/BadgerYieldSource.sol\"",
     "coverage": "FORK_MAINNET=true yarn hardhat coverage  --testfiles \"test/*.js\"",
     "coverage:file": "yarn hardhat coverage --testfiles",
     "start-fork": "FORK_MAINNET=true hardhat node --no-reset --no-deploy",

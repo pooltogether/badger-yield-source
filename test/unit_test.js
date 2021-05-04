@@ -1,6 +1,6 @@
-const { ethers } = require("hardhat");
-const { solidity } = require("ethereum-waffle");
-const chai = require("chai");
+const { ethers } = require('hardhat');
+const { solidity } = require('ethereum-waffle');
+const chai = require('chai');
 
 chai.use(solidity);
 const toWei = ethers.utils.parseEther;
@@ -9,9 +9,9 @@ const { expect } = chai;
 
 let overrides = { gasLimit: 9500000 };
 
-describe("SushiYieldSource", function () {
-  let sushi;
-  let sushiBar;
+describe('BadgerYieldSource', function () {
+  let badger;
+  let badgerSett;
   let wallet;
   let wallet2;
   let yieldSource;
@@ -20,82 +20,82 @@ describe("SushiYieldSource", function () {
   beforeEach(async function () {
     [wallet, wallet2] = await ethers.getSigners();
     const ERC20MintableContract = await hre.ethers.getContractFactory(
-      "ERC20Mintable",
+      'ERC20Mintable',
       wallet,
       overrides
     );
-    sushi = await ERC20MintableContract.deploy("Sushi", "SUSHI");
+    badger = await ERC20MintableContract.deploy('Badger', 'BADGER');
 
-    const SushiBarContract = await hre.ethers.getContractFactory(
-      "SushiBar",
+    const BadgerSettContract = await hre.ethers.getContractFactory(
+      'BadgerSett',
       wallet,
       overrides
     );
-    sushiBar = await SushiBarContract.deploy(sushi.address);
+    badgerSett = await BadgerSettContract.deploy(badger.address);
 
-    const SushiYieldSourceContract = await ethers.getContractFactory(
-      "SushiYieldSource"
+    const BadgerYieldSourceContract = await ethers.getContractFactory(
+      'BadgerYieldSource'
     );
-    yieldSource = await SushiYieldSourceContract.deploy(
-      sushiBar.address,
-      sushi.address,
+    yieldSource = await BadgerYieldSourceContract.deploy(
+      badgerSett.address,
+      badger.address,
       overrides
     );
-    amount = toWei("100");
-    await sushi.mint(wallet.address, amount);
-    await sushi.mint(wallet2.address, amount.mul(99));
-    await sushi.connect(wallet2).approve(sushiBar.address, amount.mul(99));
-    await sushiBar.connect(wallet2).enter(amount.mul(99));
+    amount = toWei('100');
+    await badger.mint(wallet.address, amount);
+    await badger.mint(wallet2.address, amount.mul(99));
+    await badger.connect(wallet2).approve(badgerSett.address, amount.mul(99));
+    await badgerSett.connect(wallet2).enter(amount.mul(99));
   });
 
-  it("get token address", async function () {
+  it('get token address', async function () {
     let address = await yieldSource.depositToken();
-    expect(address == sushi);
+    expect(address == badger);
   });
 
-  it("balanceOfToken", async function () {
+  it('balanceOfToken', async function () {
     expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
       0
     );
 
-    await sushi.connect(wallet).approve(yieldSource.address, amount);
+    await badger.connect(wallet).approve(yieldSource.address, amount);
     await yieldSource.supplyTokenTo(amount, wallet.address);
     expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
       amount
     );
   });
 
-  it("supplyTokenTo", async function () {
-    await sushi.connect(wallet).approve(yieldSource.address, amount);
+  it('supplyTokenTo', async function () {
+    await badger.connect(wallet).approve(yieldSource.address, amount);
     await yieldSource.supplyTokenTo(amount, wallet.address);
-    expect(await sushi.balanceOf(sushiBar.address)).to.eq(amount.mul(100));
+    expect(await badger.balanceOf(badgerSett.address)).to.eq(amount.mul(100));
     expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
       amount
     );
   });
 
-  it("redeemToken", async function () {
-    await sushi.connect(wallet).approve(yieldSource.address, amount);
+  it('redeemToken', async function () {
+    await badger.connect(wallet).approve(yieldSource.address, amount);
     await yieldSource.supplyTokenTo(amount, wallet.address);
 
-    expect(await sushi.balanceOf(wallet.address)).to.eq(0);
+    expect(await badger.balanceOf(wallet.address)).to.eq(0);
     await yieldSource.redeemToken(amount);
-    expect(await sushi.balanceOf(wallet.address)).to.eq(amount);
+    expect(await badger.balanceOf(wallet.address)).to.eq(amount);
   });
 
-  [toWei("100"), toWei("100").mul(10), toWei("100").mul(99)].forEach(function (
+  [toWei('100'), toWei('100').mul(10), toWei('100').mul(99)].forEach(function (
     amountToDeposit
   ) {
     it(
-      "deposit " + toEth(amountToDeposit) + ", sushi accrues, withdrawal",
+      'deposit ' + toEth(amountToDeposit) + ', badger accrues, withdrawal',
       async function () {
-        await sushi.mint(wallet.address, amountToDeposit.sub(amount));
-        await sushi
+        await badger.mint(wallet.address, amountToDeposit.sub(amount));
+        await badger
           .connect(wallet)
           .approve(yieldSource.address, amountToDeposit);
         await yieldSource.supplyTokenTo(amountToDeposit, wallet.address);
         // increase total balance by amount
-        await sushi.mint(sushiBar.address, amount);
+        await badger.mint(badgerSett.address, amount);
 
         const totalAmount = await yieldSource.callStatic.balanceOfToken(
           wallet.address
@@ -106,7 +106,7 @@ describe("SushiYieldSource", function () {
         expect(totalAmount).to.eq(expectedAmount);
 
         await yieldSource.redeemToken(totalAmount);
-        expect(await sushi.balanceOf(wallet.address)).to.be.closeTo(
+        expect(await badger.balanceOf(wallet.address)).to.be.closeTo(
           totalAmount,
           1
         );

@@ -2,7 +2,7 @@
 
 pragma solidity >=0.6.0 <0.7.0;
 
-interface ISushi {
+interface IBadger {
     function balanceOf(address account) external view returns (uint256);
 
     function transferFrom(
