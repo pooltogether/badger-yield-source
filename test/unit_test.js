@@ -18,7 +18,8 @@ describe('BadgerYieldSource', function () {
   let amount;
 
   beforeEach(async function () {
-    [wallet, wallet2] = await ethers.getSigners();
+    [wallet, wallet2, wallet3] = await ethers.getSigners();
+
     const ERC20MintableContract = await ethers.getContractFactory(
       'ERC20Mintable',
       wallet,
@@ -27,28 +28,62 @@ describe('BadgerYieldSource', function () {
     badger = await ERC20MintableContract.deploy('Badger', 'BADGER');
 
     const BadgerSettContract = await ethers.getContractFactory(
-      'BadgerSett',
+      'Sett',
       wallet,
       overrides
     );
     badgerSett = await BadgerSettContract.deploy();
-    const burnAddr = '0x' + '0'.repeat(40);
-    // const token = badger.address;
-    // const governance = badger.deployer;
-    // const guardian = badger.guardian;
-    // const keeper = badger.deployer;
-    // const controller = badger.getController('native');
-    const token = badger.address;
-    const governance = burnAddr;
-    const guardian = burnAddr;
-    const keeper = burnAddr;
-    const controller = burnAddr;
+
+    //
+
+    const tokenAddress = badger.address;
+    const governanceAddress = wallet.address;
+    const guardianAddress = wallet.address;
+    const keeperAddress = wallet.address;
+    const rewardsAddress = wallet.address;
+    const strategistAddress = wallet.address;
+
+    //
+
+    const Controller = await ethers.getContractFactory(
+      'Controller',
+      wallet,
+      overrides
+    );
+    controller = await Controller.deploy();
+    await controller.initialize(
+      governanceAddress,
+      strategistAddress,
+      keeperAddress,
+      rewardsAddress
+    ); 
+
+    const Strategy = await ethers.getContractFactory(
+      'StrategyBadgerRewards',
+      wallet,
+      overrides
+    );
+    strategy = await Strategy.deploy();
+
+    await strategy.initialize(
+      governanceAddress,
+      strategistAddress,
+      controller.address,
+      keeperAddress,
+      guardianAddress,
+      [tokenAddress, badgerSett.address], // want, geyser
+      [1000, 1000, 50], // performanceFeeStrategist, performanceFeeGovernance, withdrawalFee
+    );
+   
+    await controller.approveStrategy(tokenAddress, strategy.address);
+    await controller.setStrategy(tokenAddress, strategy.address);
+
     await badgerSett.initialize(
-      token,
-      controller,
-      governance,
-      keeper,
-      guardian,
+      tokenAddress,
+      controller.address,
+      governanceAddress,
+      keeperAddress,
+      guardianAddress,
       true,
       'Badger Sett Badger',
       'bBADGER'
@@ -62,46 +97,56 @@ describe('BadgerYieldSource', function () {
       badger.address,
       overrides
     );
+
+    // whilelist the yield source
+    await badgerSett.approveContractAccess(yieldSource.address);
+
     amount = toWei('100');
-    await badger.mint(wallet.address, amount);
+    await badger.mint(wallet3.address, amount);
     await badger.mint(wallet2.address, amount.mul(99));
+    // let wallet2 deposit some badger into badgersett
     await badger.connect(wallet2).approve(badgerSett.address, amount.mul(99));
     await badgerSett.connect(wallet2).deposit(amount.mul(99));
   });
 
-  it.only('get token address', async function () {
+  it('get token address', async function () {
     let address = await yieldSource.depositToken();
     expect(address == badger);
   });
 
   it('balanceOfToken', async function () {
-    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+    expect(await yieldSource.callStatic.balanceOfToken(wallet3.address)).to.eq(
       0
     );
-
-    await badger.connect(wallet).approve(yieldSource.address, amount);
-    await yieldSource.supplyTokenTo(amount, wallet.address);
-    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+    expect(await badger.callStatic.balanceOf(wallet3.address)).to.eq(
       amount
+    );
+    await badger.connect(wallet3).approve(yieldSource.address, amount);
+    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
+    expect(await yieldSource.callStatic.balanceOfToken(wallet3.address)).to.eq(
+      amount
+    );
+    expect(await badger.callStatic.balanceOf(wallet3.address)).to.eq(
+      0
     );
   });
 
   it('supplyTokenTo', async function () {
-    await badger.connect(wallet).approve(yieldSource.address, amount);
-    await yieldSource.supplyTokenTo(amount, wallet.address);
+    await badger.connect(wallet3).approve(yieldSource.address, amount);
+    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
     expect(await badger.balanceOf(badgerSett.address)).to.eq(amount.mul(100));
-    expect(await yieldSource.callStatic.balanceOfToken(wallet.address)).to.eq(
+    expect(await yieldSource.callStatic.balanceOfToken(wallet3.address)).to.eq(
       amount
     );
   });
 
   it('redeemToken', async function () {
-    await badger.connect(wallet).approve(yieldSource.address, amount);
-    await yieldSource.supplyTokenTo(amount, wallet.address);
+    await badger.connect(wallet3).approve(yieldSource.address, amount);
+    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
 
-    expect(await badger.balanceOf(wallet.address)).to.eq(0);
-    await yieldSource.redeemToken(amount);
-    expect(await badger.balanceOf(wallet.address)).to.eq(amount);
+    expect(await badger.balanceOf(wallet3.address)).to.eq(0);
+    await yieldSource.connect(wallet3).redeemToken(amount);
+    expect(await badger.balanceOf(wallet3.address)).to.eq(amount);
   });
 
   [toWei('100'), toWei('100').mul(10), toWei('100').mul(99)].forEach(function (
@@ -110,24 +155,24 @@ describe('BadgerYieldSource', function () {
     it(
       'deposit ' + toEth(amountToDeposit) + ', badger accrues, withdrawal',
       async function () {
-        await badger.mint(wallet.address, amountToDeposit.sub(amount));
+        await badger.mint(wallet3.address, amountToDeposit.sub(amount));
         await badger
-          .connect(wallet)
+          .connect(wallet3)
           .approve(yieldSource.address, amountToDeposit);
-        await yieldSource.supplyTokenTo(amountToDeposit, wallet.address);
+        await yieldSource.connect(wallet3).supplyTokenTo(amountToDeposit, wallet3.address);
         // increase total balance by amount
         await badger.mint(badgerSett.address, amount);
 
         const totalAmount = await yieldSource.callStatic.balanceOfToken(
-          wallet.address
+          wallet3.address
         );
         const expectedAmount = amountToDeposit
           .mul(amountToDeposit.add(amount.mul(100)))
           .div(amountToDeposit.add(amount.mul(99)));
         expect(totalAmount).to.eq(expectedAmount);
 
-        await yieldSource.redeemToken(totalAmount);
-        expect(await badger.balanceOf(wallet.address)).to.be.closeTo(
+        await yieldSource.connect(wallet3).redeemToken(totalAmount);
+        expect(await badger.balanceOf(wallet3.address)).to.be.closeTo(
           totalAmount,
           1
         );

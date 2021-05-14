@@ -53,3 +53,9 @@ export HDWALLET_MNEMONIC=
 yarn hardhat --network mainnet deploy
 yarn hardhat --network mainnet etherscan-verify --api-key $ETHERSCAN_TOKEN
 ```
+
+Then have the Badger Gov whitelist the yield source contract in the BadgetSett contract.
+
+```
+  await badgerSett.approveContractAccess(yieldSource.address);
+```

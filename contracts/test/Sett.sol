@@ -31,7 +31,7 @@ import "./SettAccessControlDefended.sol";
     * All permissioned write functions, with the exception of pause() & unpause(), are pausable as well
 */
 
-contract BadgerSett is ERC20Upgradeable, SettAccessControlDefended, PausableUpgradeable {
+contract Sett is ERC20Upgradeable, SettAccessControlDefended, PausableUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using AddressUpgradeable for address;
     using SafeMathUpgradeable for uint256;
@@ -91,7 +91,7 @@ contract BadgerSett is ERC20Upgradeable, SettAccessControlDefended, PausableUpgr
         emit FullPricePerShareUpdated(getPricePerFullShare(), now, block.number);
 
         // Paused on launch
-        _pause();
+        // _pause();
     }
 
     /// ===== Modifiers =====
@@ -124,7 +124,8 @@ contract BadgerSett is ERC20Upgradeable, SettAccessControlDefended, PausableUpgr
     /// @notice Return the total balance of the underlying token within the system
     /// @notice Sums the balance in the Sett, the Controller, and the Strategy
     function balance() public view returns (uint256) {
-        return token.balanceOf(address(this)).add(IController(controller).balanceOf(address(token)));
+        uint256 b = token.balanceOf(address(this));
+        return b.add(IController(controller).balanceOf(address(token)));
     }
 
     /// @notice Defines how much of the Setts' underlying can be borrowed by the Strategy for use
