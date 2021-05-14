@@ -48,15 +48,14 @@ yarn coverage
 
 In order to deploy to mainnet:
 
-Update `HDWALLET_MNEMONIC` in your end file.
-Then deploy:
+Update `HDWALLET_MNEMONIC` in your env file and deploy:
 
 ```
 env-cmd yarn hardhat --network mainnet deploy
 env-cmd yarn hardhat --network mainnet etherscan-verify --api-key $ETHERSCAN_TOKEN
 ```
 
-Lastly, have the [Badger Gov](https://snapshot.org/#/badgerdao.eth) whitelist the yield source contract in the BadgetSett contract.
+Then, have [Badger Gov](https://snapshot.org/#/badgerdao.eth) whitelist the yield source contract in the BadgetSett contract.
 
 ```
   await badgerSett.connect(badger.governance).approveContractAccess(yieldSource.address);
