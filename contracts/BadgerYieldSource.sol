@@ -6,6 +6,7 @@ import {IYieldSource} from "@pooltogether/yield-source-interface/contracts/IYiel
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IBadgerSett.sol";
 import "./IBadger.sol";
+import "hardhat/console.sol";
 
 /// @title A pooltogether yield source for badger sett
 /// @author Steffel Fenix, 0xkarl
@@ -37,7 +38,7 @@ contract BadgerYieldSource is IYieldSource {
 
         uint256 badgerBalance =
             shares
-                .mul(IBadger(badgerAddr).balanceOf(address(badgerSettAddr)))
+                .mul(badgerSett.balance())
                 .div(totalShares);
         uint256 sourceShares = badgerSett.balanceOf(address(this));
 
@@ -48,10 +49,12 @@ contract BadgerYieldSource is IYieldSource {
     /// @param amount The amount of `token()` to be supplied
     /// @param to The user whose balance will receive the tokens
     function supplyTokenTo(uint256 amount, address to) public override {
-        IBadger(badgerAddr).transferFrom(msg.sender, address(this), amount);
-        IBadger(badgerAddr).approve(badgerSettAddr, amount);
-
         IBadgerSett badgerSett = IBadgerSett(badgerSettAddr);
+        IBadger badger = IBadger(badgerAddr);
+
+        badger.transferFrom(msg.sender, address(this), amount);
+        badger.approve(badgerSettAddr, amount);
+
         uint256 beforeBalance = badgerSett.balanceOf(address(this));
         badgerSett.deposit(amount);
         uint256 afterBalance = badgerSett.balanceOf(address(this));
@@ -67,7 +70,7 @@ contract BadgerYieldSource is IYieldSource {
         IBadger badger = IBadger(badgerAddr);
 
         uint256 totalShares = badgerSett.totalSupply();
-        uint256 badgerSettBadgerBalance = badger.balanceOf(address(badgerSett));
+        uint256 badgerSettBadgerBalance = badgerSett.balance();
         uint256 requiredShares =
             amount.mul(totalShares).div(badgerSettBadgerBalance);
 

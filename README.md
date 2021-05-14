@@ -14,11 +14,11 @@ yarn
 
 ## Setup
 
-You will needs to enviroment variables to run the tests.
+Copy .env.sample to .env and update the required enviroment variables to ran integration tests:
 
 ```
-export WEB3_INFURA_PROJECT_ID=
-export ETHERSCAN_TOKEN=
+WEB3_INFURA_PROJECT_ID=
+ETHERSCAN_TOKEN=
 ```
 
 You will get the first one from https://infura.io/
@@ -48,14 +48,16 @@ yarn coverage
 
 In order to deploy to mainnet:
 
-```
-export HDWALLET_MNEMONIC=
-yarn hardhat --network mainnet deploy
-yarn hardhat --network mainnet etherscan-verify --api-key $ETHERSCAN_TOKEN
-```
-
-Then have the Badger Gov whitelist the yield source contract in the BadgetSett contract.
+Update `HDWALLET_MNEMONIC` in your end file.
+Then deploy:
 
 ```
-  await badgerSett.approveContractAccess(yieldSource.address);
+env-cmd yarn hardhat --network mainnet deploy
+env-cmd yarn hardhat --network mainnet etherscan-verify --api-key $ETHERSCAN_TOKEN
+```
+
+Lastly, have the [Badger Gov](https://snapshot.org/#/badgerdao.eth) whitelist the yield source contract in the BadgetSett contract.
+
+```
+  await badgerSett.connect(badger.governance).approveContractAccess(yieldSource.address);
 ```

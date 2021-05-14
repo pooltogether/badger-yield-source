@@ -1,6 +1,6 @@
 const hardhat = require("hardhat");
 const chalk = require("chalk");
-const SUSHI_HOLDER = "0xE93381fB4c4F14bDa253907b18faD305D799241a";
+const BADGER_HOLDER = "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be"; // binance
 const { ethers, deployments, getNamedAccounts } = hardhat;
 const hre = require("hardhat");
 
@@ -36,29 +36,29 @@ async function getYieldSourcePrizePoolProxy(tx) {
 async function run() {
   await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
-    params: [SUSHI_HOLDER],
+    params: [BADGER_HOLDER],
   });
 
-  const sushiHolder = await ethers.provider.getSigner(SUSHI_HOLDER);
-  const sushi = await ethers.getContractAt(
+  const badgerHolder = await ethers.provider.getSigner(BADGER_HOLDER);
+  const badger = await ethers.getContractAt(
     "IERC20Upgradeable",
-    "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2",
-    sushiHolder
+    "0x3472a5a71965499acd81997a54bba8d852c6e53d",
+    badgerHolder
   );
   const builder = await ethers.getVerifiedContractAt(
     "0x39E2F33ff4Ad3491106B3BB15dc66EbE24e4E9C7"
   );
 
-  SushiYieldSourceFactory = await ethers.getContractFactory("SushiYieldSource");
-  sushiYieldSource = await SushiYieldSourceFactory.deploy(
-    "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272",
-    "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2"
+  BadgerYieldSourceFactory = await ethers.getContractFactory("BadgerYieldSource");
+  badgerYieldSource = await BadgerYieldSourceFactory.deploy(
+    badger.address,
+    "0x19d97d8fa813ee2f51ad4b4e04ea08baf4dffc28"
   );
 
   const block = await ethers.provider.getBlock();
 
   const yieldSourcePrizePoolConfig = {
-    yieldSource: sushiYieldSource.address,
+    yieldSource: badgerYieldSource.address,
     maxExitFeeMantissa: ethers.utils.parseEther("0.1"),
     maxTimelockDuration: 300,
   };
@@ -85,7 +85,7 @@ async function run() {
   const prizePool = await ethers.getContractAt(
     "YieldSourcePrizePool",
     await getYieldSourcePrizePoolProxy(tx),
-    sushiHolder
+    badgerHolder
   );
 
   green(`Created YieldSourcePrizePool ${prizePool.address}`);
@@ -93,51 +93,51 @@ async function run() {
   const prizeStrategy = await ethers.getContractAt(
     "MultipleWinners",
     await prizePool.prizeStrategy(),
-    sushiHolder
+    badgerHolder
   );
   const ticketAddress = await prizeStrategy.ticket();
   const ticket = await ethers.getContractAt(
     "Ticket",
     ticketAddress,
-    sushiHolder
+    badgerHolder
   );
 
   const depositAmount = toWei("1000");
 
-  dim(`Approving Sushi spend for ${sushiHolder._address}...`);
-  await sushi.approve(prizePool.address, depositAmount);
+  dim(`Approving Badger spend for ${badgerHolder._address}...`);
+  await badger.approve(prizePool.address, depositAmount);
   dim(
-    `Depositing into Pool with ${sushiHolder._address}, ${depositAmount}, ${ticketAddress} ${ethers.constants.AddressZero}...`
+    `Depositing into Pool with ${badgerHolder._address}, ${depositAmount}, ${ticketAddress} ${ethers.constants.AddressZero}...`
   );
   await prizePool.depositTo(
-    sushiHolder._address,
+    badgerHolder._address,
     depositAmount,
     ticketAddress,
     ethers.constants.AddressZero
   );
   dim(
-    `Prize Pool sushi balance: ${ethers.utils.formatEther(
-      await sushiYieldSource.callStatic.balanceOfToken(prizePool.address)
+    `Prize Pool badger balance: ${ethers.utils.formatEther(
+      await badgerYieldSource.callStatic.balanceOfToken(prizePool.address)
     )}`
   );
   dim(`Withdrawing...`);
-  const sushiBalanceBeforeWithdrawal = await sushi.balanceOf(
-    sushiHolder._address
+  const badgerBalanceBeforeWithdrawal = await badger.balanceOf(
+    badgerHolder._address
   );
   await prizePool.withdrawInstantlyFrom(
-    sushiHolder._address,
+    badgerHolder._address,
     depositAmount,
     ticketAddress,
     depositAmount
   );
-  const sushiDiffAfterWithdrawal = (
-    await sushi.balanceOf(sushiHolder._address)
-  ).sub(sushiBalanceBeforeWithdrawal);
-  dim(`Withdrew ${ethers.utils.formatEther(sushiDiffAfterWithdrawal)} sushi`);
+  const badgerDiffAfterWithdrawal = (
+    await badger.balanceOf(badgerHolder._address)
+  ).sub(badgerBalanceBeforeWithdrawal);
+  dim(`Withdrew ${ethers.utils.formatEther(badgerDiffAfterWithdrawal)} badger`);
 
   dim(
-    `Prize Pool sushi balance: ${ethers.utils.formatEther(
-      await sushiYieldSource.callStatic.balanceOfToken(prizePool.address)
+    `Prize Pool badger balance: ${ethers.utils.formatEther(
+      await badgerYieldSource.callStatic.balanceOfToken(prizePool.address)
     )}`
   );
 
@@ -147,9 +147,9 @@ async function run() {
     `Prize is now: ${ethers.utils.formatEther(await prizePool.awardBalance())}`
   );
 
-  await sushi.approve(prizePool.address, depositAmount);
+  await badger.approve(prizePool.address, depositAmount);
   await prizePool.depositTo(
-    sushiHolder._address,
+    badgerHolder._address,
     depositAmount,
     await prizeStrategy.ticket(),
     ethers.constants.AddressZero
@@ -188,26 +188,26 @@ async function run() {
 
   if (awarded) {
     console.log(
-      `Awarded ${ethers.utils.formatEther(awarded.args.amount)} Sushi`
+      `Awarded ${ethers.utils.formatEther(awarded.args.amount)} Badger`
     );
   } else {
     console.log(`No prizes`);
   }
 
-  const sushiBalance = await sushi.balanceOf(sushiHolder._address);
-  const balance = await ticket.balanceOf(sushiHolder._address);
+  const badgerBalance = await badger.balanceOf(badgerHolder._address);
+  const balance = await ticket.balanceOf(badgerHolder._address);
   dim(`Users balance is ${ethers.utils.formatEther(balance)}`);
   await prizePool.withdrawInstantlyFrom(
-    sushiHolder._address,
+    badgerHolder._address,
     balance,
     ticketAddress,
     balance
   );
 
-  const sushiDiff = (await sushi.balanceOf(sushiHolder._address)).sub(
-    sushiBalance
+  const badgerDiff = (await badger.balanceOf(badgerHolder._address)).sub(
+    badgerBalance
   );
-  dim(`Amount withdrawn is ${ethers.utils.formatEther(sushiDiff)}`);
+  dim(`Amount withdrawn is ${ethers.utils.formatEther(badgerDiff)}`);
 }
 
 run();

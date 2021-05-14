@@ -10,7 +10,7 @@ node_modules
 dist
 coverage
 coverage.json
-.envrc
+.env
 .openzeppelin/dev-*
 .openzeppelin/.session
 .oz-migrate/dev-*

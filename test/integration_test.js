@@ -1,6 +1,6 @@
 const { ethers, waffle } = require("hardhat");
 const hre = require("hardhat");
-const toWei = ethers.utils.parseEther;
+const {parseEther} = ethers.utils;
 const { BigNumber } = require("ethers");
 const { solidity } = require("ethereum-waffle");
 const chai = require("chai");
@@ -20,7 +20,6 @@ async function getEvents(contract, tx) {
 
 describe("BadgerYieldSource integration", function () {
   let badger;
-  let badgerDecimals;
   let poolWithMultipleWinnersBuilder;
   let factory;
   let prizePool;
@@ -32,6 +31,8 @@ describe("BadgerYieldSource integration", function () {
   let exchangeWallet;
   let yieldSourcePrizePoolABI;
   let multipleWinnersABI;
+  let governance;
+  let badgerHolder;
 
   before(async function () {
     // deploy all the pool together.
@@ -110,21 +111,35 @@ describe("BadgerYieldSource integration", function () {
       { gasLimit: 9500000 }
     );
 
+    const badgerWhaleAddress = "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be"; // binance
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [badgerWhaleAddress],
+    });
+    badgerWhale = await waffle.provider.getSigner(badgerWhaleAddress);
+
+    const governanceAddress = "0xb65cef03b9b89f99517643226d76e286ee999e77";
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [governanceAddress],
+    });
+    governance = await waffle.provider.getSigner(governanceAddress);
+
     const exchangeWalletAddress = "0xD551234Ae421e3BCBA99A0Da6d736074f22192FF";
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [exchangeWalletAddress],
     });
     exchangeWallet = await waffle.provider.getSigner(exchangeWalletAddress);
+
     badger = await ethers.getVerifiedContractAt(
-      "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
+      "0x3472a5a71965499acd81997a54bba8d852c6e53d",
       exchangeWallet
     );
-    badgerSett = await ethers.getVerifiedContractAt(
-      "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272"
-    );
+    badgerSett = (await ethers.getVerifiedContractAt(
+      "0xe4ae305b08434bf3d74e0086592627f913a258a9" // proxy
+    )).attach("0x19d97d8fa813ee2f51ad4b4e04ea08baf4dffc28");
 
-    badgerDecimals = await badger.decimals();
     factory = await ethers.getContractFactory("BadgerYieldSource");
 
     yieldSourcePrizePoolABI = (
@@ -140,13 +155,14 @@ describe("BadgerYieldSource integration", function () {
     // setup
 
     yieldSource = await factory.deploy(
-      "0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272",
-      "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2",
+      badgerSett.address,
+      badger.address,
       { gasLimit: 9500000 }
     );
+
     const yieldSourcePrizePoolConfig = {
       yieldSource: yieldSource.address,
-      maxExitFeeMantissa: toWei("0.5"),
+      maxExitFeeMantissa: parseEther("0.5"),
       maxTimelockDuration: 1000,
     };
     const RGNFactory = await ethers.getContractFactory("RNGServiceMock");
@@ -161,8 +177,8 @@ describe("BadgerYieldSource integration", function () {
       ticketSymbol: "badgerp",
       sponsorshipName: "badgersponso",
       sponsorshipSymbol: "badgersp",
-      ticketCreditLimitMantissa: toWei("0.1"),
-      ticketCreditRateMantissa: toWei("0.1"),
+      ticketCreditLimitMantissa: parseEther("0.1"),
+      ticketCreditRateMantissa: parseEther("0.1"),
       externalERC20Awards: [],
       numberOfWinners: 1,
     };
@@ -188,36 +204,45 @@ describe("BadgerYieldSource integration", function () {
       wallet
     );
 
+    await badgerSett.connect(governance).approveContractAccess(yieldSource.address);
+
     // get some badger
-    await badger.transfer(
+    await badger.connect(badgerWhale).transfer(
       wallet.address,
-      BigNumber.from(1000).mul(BigNumber.from(10).pow(badgerDecimals))
+      parseEther("1000")
     );
+    expect(await badger.balanceOf(wallet.address)).to.be.above(0);
   });
 
   it("should be able to get underlying balance", async function () {
-    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
+    const amount = parseEther("100");
+    await badger.connect(wallet).approve(prizePool.address, amount);
     let [token] = await prizePool.tokens();
+
+    expect(
+      await yieldSource.callStatic.balanceOfToken(prizePool.address)
+    ).to.equal(0);
+
     await prizePool.depositTo(
       wallet.address,
-      toWei("100"),
+      amount,
       token,
       wallets[1].address
     );
 
     expect(
       await yieldSource.callStatic.balanceOfToken(prizePool.address)
-    ).to.be.closeTo(toWei("100"), 10);
+    ).to.be.closeTo(amount, 10);
     expect(await badgerSett.balanceOf(yieldSource.address)).to.be.above(0);
   });
 
   it("should be able to withdraw", async function () {
-    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
+    await badger.connect(wallet).approve(prizePool.address, parseEther("100"));
     let [token] = await prizePool.tokens();
 
     await prizePool.depositTo(
       wallet.address,
-      toWei("100"),
+      parseEther("100"),
       token,
       wallets[1].address
     );
@@ -225,7 +250,7 @@ describe("BadgerYieldSource integration", function () {
     const beforeBalance = await badger.balanceOf(wallet.address);
     await prizePool.withdrawInstantlyFrom(
       wallet.address,
-      toWei("1"),
+      parseEther("1"),
       token,
       1000
     );
@@ -234,14 +259,14 @@ describe("BadgerYieldSource integration", function () {
   });
 
   it("should be able to withdraw all", async function () {
-    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
+    await badger.connect(wallet).approve(prizePool.address, parseEther("100"));
     let [token] = await prizePool.tokens();
 
     const initialBalance = await badger.balanceOf(wallet.address);
 
     await prizePool.depositTo(
       wallet.address,
-      toWei("100"),
+      parseEther("100"),
       token,
       wallets[1].address
     );
@@ -253,12 +278,12 @@ describe("BadgerYieldSource integration", function () {
     hre.network.provider.send("evm_increaseTime", [10]);
 
     await expect(
-      prizePool.withdrawInstantlyFrom(wallet.address, toWei("200"), token, 0)
+      prizePool.withdrawInstantlyFrom(wallet.address, parseEther("200"), token, 0)
     ).to.be.reverted;
 
     await prizePool.withdrawInstantlyFrom(
       wallet.address,
-      toWei("100"),
+      parseEther("100"),
       token,
       0
     );
@@ -270,15 +295,15 @@ describe("BadgerYieldSource integration", function () {
   });
 
   it("should not left funds behind", async function () {
-    await badger.connect(wallet).approve(prizePool.address, toWei("100"));
+    await badger.connect(wallet).approve(prizePool.address, parseEther("100"));
 
     let [token] = await prizePool.tokens();
 
-    badger.connect(wallet).transfer(badgerSett.address, toWei("10"));
+    badger.connect(wallet).transfer(badgerSett.address, parseEther("10"));
 
     await prizePool.depositTo(
       wallet.address,
-      toWei("10"),
+      parseEther("10"),
       token,
       wallets[1].address
     );
@@ -287,7 +312,7 @@ describe("BadgerYieldSource integration", function () {
 
     await prizePool.withdrawInstantlyFrom(
       wallet.address,
-      toWei("10"),
+      parseEther("10"),
       token,
       0
     );

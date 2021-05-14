@@ -14,4 +14,7 @@ interface IBadgerSett {
     function transfer(address recipient, uint256 amount)
         external
         returns (bool);
+
+    //
+    function balance() external view returns (uint256);
 }
