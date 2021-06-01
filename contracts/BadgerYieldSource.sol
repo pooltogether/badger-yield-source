@@ -34,7 +34,6 @@ contract BadgerYieldSource is IYieldSource {
 
         uint256 shares = badgerSett.balanceOf(address(this));
         uint256 totalShares = badgerSett.totalSupply();
-
         uint256 badgerBalance =
             shares
                 .mul(badgerSett.balance())
