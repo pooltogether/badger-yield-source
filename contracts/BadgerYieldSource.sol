@@ -12,26 +12,25 @@ import "hardhat/console.sol";
 /// @author Steffel Fenix, 0xkarl
 contract BadgerYieldSource is IYieldSource {
     using SafeMath for uint256;
-    address public badgerSettAddr;
-    address public badgerAddr;
-    mapping(address => uint256) public balances;
+    IBadgerSett private immutable badgerSett;
+    IBadger private immutable badger;
+    mapping(address => uint256) private balances;
 
-    constructor(address _badgerSettAddr, address _badgerAddr) public {
-        badgerSettAddr = _badgerSettAddr;
-        badgerAddr = _badgerAddr;
+    constructor(address badgerSettAddr, address badgerAddr) public {
+        badgerSett = IBadgerSett(badgerSettAddr);
+        badger = IBadger(badgerAddr);
     }
-
+    
     /// @notice Returns the ERC20 asset token used for deposits.
     /// @return The ERC20 asset token
     function depositToken() public view override returns (address) {
-        return (badgerAddr);
+        return (address(badger));
     }
 
     /// @notice Returns the total balance (in asset tokens).  This includes the deposits and interest.
     /// @return The underlying balance of asset tokens
     function balanceOfToken(address addr) public override returns (uint256) {
         if (balances[addr] == 0) return 0;
-        IBadgerSett badgerSett = IBadgerSett(badgerSettAddr);
 
         uint256 shares = badgerSett.balanceOf(address(this));
         uint256 totalShares = badgerSett.totalSupply();
@@ -49,11 +48,8 @@ contract BadgerYieldSource is IYieldSource {
     /// @param amount The amount of `token()` to be supplied
     /// @param to The user whose balance will receive the tokens
     function supplyTokenTo(uint256 amount, address to) public override {
-        IBadgerSett badgerSett = IBadgerSett(badgerSettAddr);
-        IBadger badger = IBadger(badgerAddr);
-
         badger.transferFrom(msg.sender, address(this), amount);
-        badger.approve(badgerSettAddr, amount);
+        badger.approve(address(badgerSett), amount);
 
         uint256 beforeBalance = badgerSett.balanceOf(address(this));
         badgerSett.deposit(amount);
@@ -66,9 +62,6 @@ contract BadgerYieldSource is IYieldSource {
     /// @param amount The amount of `token()` to withdraw.  Denominated in `token()` as above.
     /// @return The actual amount of tokens that were redeemed.
     function redeemToken(uint256 amount) public override returns (uint256) {
-        IBadgerSett badgerSett = IBadgerSett(badgerSettAddr);
-        IBadger badger = IBadger(badgerAddr);
-
         uint256 totalShares = badgerSett.totalSupply();
         uint256 badgerSettBadgerBalance = badgerSett.balance();
         uint256 requiredShares =

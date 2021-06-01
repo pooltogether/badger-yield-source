@@ -44,7 +44,7 @@ yarn test
 yarn coverage
 ```
 
-# Deployement
+# Deployment
 
 In order to deploy to mainnet:
 

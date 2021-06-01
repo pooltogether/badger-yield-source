@@ -294,7 +294,7 @@ describe("BadgerYieldSource integration", function () {
     );
   });
 
-  it("should not left funds behind", async function () {
+  it("should not leave funds behind", async function () {
     await badger.connect(wallet).approve(prizePool.address, parseEther("100"));
 
     let [token] = await prizePool.tokens();
