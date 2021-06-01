@@ -67,19 +67,12 @@ contract BadgerYieldSource is IYieldSource {
         uint256 requiredShares =
             amount.mul(totalShares).div(badgerSettBadgerBalance);
 
-        uint256 badgerSettBeforeBalance = badgerSett.balanceOf(address(this));
         uint256 badgerBeforeBalance = badger.balanceOf(address(this));
-
         badgerSett.withdraw(requiredShares);
-
-        uint256 badgerSettAfterBalance = badgerSett.balanceOf(address(this));
         uint256 badgerAfterBalance = badger.balanceOf(address(this));
-
-        uint256 badgerSettBalanceDiff =
-            badgerSettBeforeBalance.sub(badgerSettAfterBalance);
         uint256 badgerBalanceDiff = badgerAfterBalance.sub(badgerBeforeBalance);
 
-        balances[msg.sender] = balances[msg.sender].sub(badgerSettBalanceDiff);
+        balances[msg.sender] = balances[msg.sender].sub(requiredShares);
         badger.transfer(msg.sender, badgerBalanceDiff);
         return (badgerBalanceDiff);
     }
