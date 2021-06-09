@@ -174,7 +174,7 @@ describe('BadgerYieldSource', function () {
         await yieldSource.connect(wallet3).redeemToken(totalAmount);
         expect(await badger.balanceOf(wallet3.address)).to.be.closeTo(
           totalAmount,
-          1
+          2
         );
       }
     );

@@ -1,5 +1,5 @@
 {
-  "name": "badger-sett-pooltogether",
+  "name": "@pooltogether/pooltogether-badger-sett-yield-source",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -36,6 +36,8 @@
     "build": "hardhat compile",
     "console": "hardhat console",
     "verify": "yarn hint && yarn test",
+    "deploy": "hardhat deploy --write true --network",
+    "etherscan-verify": "hardhat etherscan-verify --network",
     "test:integration": "FORK_MAINNET=true env-cmd yarn hardhat test --network hardhat",
     "test": "yarn hardhat test --network hardhat test/unit_test.js",
     "lint": "yarn solhint 'contracts/BadgerYieldSource.sol' && yarn prettier -c './**/*.js'",
@@ -45,5 +47,14 @@
     "coverage:file": "yarn hardhat coverage --testfiles",
     "start-fork": "FORK_MAINNET=true hardhat node --no-reset --no-deploy",
     "fork-run": "hardhat run --network localhost"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "abis/**",
+    "build/**",
+    "artifacts/**",
+    "contracts/**",
+    "deployments/**",
+    "deploy/**"
+  ]
 }

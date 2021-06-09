@@ -111,7 +111,7 @@ describe("BadgerYieldSource integration", function () {
       { gasLimit: 9500000 }
     );
 
-    const badgerWhaleAddress = "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be"; // binance
+    const badgerWhaleAddress = "0x28C6c06298d514Db089934071355E5743bf21d60"; // binance-14 // might have to change if wallets are rotated
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [badgerWhaleAddress],
