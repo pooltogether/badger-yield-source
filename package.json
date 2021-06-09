@@ -41,7 +41,7 @@
     "test:integration": "FORK_MAINNET=true env-cmd yarn hardhat test --network hardhat",
     "test": "yarn hardhat test --network hardhat test/unit_test.js",
     "lint": "yarn solhint 'contracts/BadgerYieldSource.sol' && yarn prettier -c './**/*.js'",
-    "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js",
+    "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js && yarn prettier --write scripts/*.js",
     "hint": "solhint \"contracts/BadgerYieldSource.sol\"",
     "coverage": "FORK_MAINNET=true yarn hardhat coverage  --testfiles \"test/*.js\"",
     "coverage:file": "yarn hardhat coverage --testfiles",

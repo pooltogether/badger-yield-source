@@ -1,6 +1,6 @@
 const { ethers, waffle } = require("hardhat");
 const hre = require("hardhat");
-const {parseEther} = ethers.utils;
+const { parseEther } = ethers.utils;
 const { BigNumber } = require("ethers");
 const { solidity } = require("ethereum-waffle");
 const chai = require("chai");
@@ -136,9 +136,11 @@ describe("BadgerYieldSource integration", function () {
       "0x3472a5a71965499acd81997a54bba8d852c6e53d",
       exchangeWallet
     );
-    badgerSett = (await ethers.getVerifiedContractAt(
-      "0xe4ae305b08434bf3d74e0086592627f913a258a9" // proxy
-    )).attach("0x19d97d8fa813ee2f51ad4b4e04ea08baf4dffc28");
+    badgerSett = (
+      await ethers.getVerifiedContractAt(
+        "0xe4ae305b08434bf3d74e0086592627f913a258a9" // proxy
+      )
+    ).attach("0x19d97d8fa813ee2f51ad4b4e04ea08baf4dffc28");
 
     factory = await ethers.getContractFactory("BadgerYieldSource");
 
@@ -154,11 +156,9 @@ describe("BadgerYieldSource integration", function () {
     wallet = wallets[0];
     // setup
 
-    yieldSource = await factory.deploy(
-      badgerSett.address,
-      badger.address,
-      { gasLimit: 9500000 }
-    );
+    yieldSource = await factory.deploy(badgerSett.address, badger.address, {
+      gasLimit: 9500000,
+    });
 
     const yieldSourcePrizePoolConfig = {
       yieldSource: yieldSource.address,
@@ -204,13 +204,14 @@ describe("BadgerYieldSource integration", function () {
       wallet
     );
 
-    await badgerSett.connect(governance).approveContractAccess(yieldSource.address);
+    await badgerSett
+      .connect(governance)
+      .approveContractAccess(yieldSource.address);
 
     // get some badger
-    await badger.connect(badgerWhale).transfer(
-      wallet.address,
-      parseEther("1000")
-    );
+    await badger
+      .connect(badgerWhale)
+      .transfer(wallet.address, parseEther("1000"));
     expect(await badger.balanceOf(wallet.address)).to.be.above(0);
   });
 
@@ -278,7 +279,12 @@ describe("BadgerYieldSource integration", function () {
     hre.network.provider.send("evm_increaseTime", [10]);
 
     await expect(
-      prizePool.withdrawInstantlyFrom(wallet.address, parseEther("200"), token, 0)
+      prizePool.withdrawInstantlyFrom(
+        wallet.address,
+        parseEther("200"),
+        token,
+        0
+      )
     ).to.be.reverted;
 
     await prizePool.withdrawInstantlyFrom(

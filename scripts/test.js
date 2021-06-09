@@ -49,7 +49,9 @@ async function run() {
     "0x39E2F33ff4Ad3491106B3BB15dc66EbE24e4E9C7"
   );
 
-  BadgerYieldSourceFactory = await ethers.getContractFactory("BadgerYieldSource");
+  BadgerYieldSourceFactory = await ethers.getContractFactory(
+    "BadgerYieldSource"
+  );
   badgerYieldSource = await BadgerYieldSourceFactory.deploy(
     badger.address,
     "0x19d97d8fa813ee2f51ad4b4e04ea08baf4dffc28"

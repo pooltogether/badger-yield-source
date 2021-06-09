@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.12;
 
-import {IYieldSource} from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
+import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IBadgerSett.sol";
 import "./IBadger.sol";
@@ -56,15 +56,18 @@ contract BadgerYieldSource is IYieldSource {
     /// @return The actual amount of tokens that were redeemed.
     function redeemToken(uint256 amount) public override returns (uint256) {
         uint256 totalShares = badgerSett.totalSupply();
-        if(totalShares == 0) return 0; 
+        if (totalShares == 0) return 0;
 
         uint256 badgerSettBadgerBalance = badgerSett.balance();
-        if(badgerSettBadgerBalance == 0) return 0;
+        if (badgerSettBadgerBalance == 0) return 0;
 
         uint256 badgerBeforeBalance = badger.balanceOf(address(this));
 
-        uint256 requiredShares = ((amount.mul(totalShares) + totalShares)).div(badgerSettBadgerBalance);
-        if(requiredShares == 0) return 0;
+        uint256 requiredShares =
+            ((amount.mul(totalShares) + totalShares)).div(
+                badgerSettBadgerBalance
+            );
+        if (requiredShares == 0) return 0;
 
         uint256 requiredSharesBalance = requiredShares.sub(1);
         badgerSett.withdraw(requiredSharesBalance);
