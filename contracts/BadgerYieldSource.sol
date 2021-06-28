@@ -3,19 +3,20 @@
 pragma solidity 0.6.12;
 
 import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IBadgerSett.sol";
-import "./IBadger.sol";
-
 
 /// @title A pooltogether yield source for badger sett
 /// @author Steffel Fenix, 0xkarl
 contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
+    using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
     IBadgerSett private immutable badgerSett;
-    IBadger private immutable badger;
+    IERC20 private immutable badger;
     mapping(address => uint256) private balances;
 
     /// @notice Emitted when asset tokens are redeemed from the yield source
@@ -33,11 +34,11 @@ contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
         address indexed to
     );
 
-    constructor(address badgerSettAddr, address badgerAddr) public ReentrancyGuard() {
-        require(address(badgerSettAddr) != address(0), "BadgerYieldSource/badgerSettAddr-not-zero-address");
-        require(address(badgerAddr) != address(0), "BadgerYieldSource/badgerAddr-not-zero-address");
-        badgerSett = IBadgerSett(badgerSettAddr);
-        badger = IBadger(badgerAddr);
+    constructor(IBadgerSett _badgerSettAddr, IERC20 _badgerAddr) public ReentrancyGuard() {
+        require(address(_badgerSettAddr) != address(0), "BadgerYieldSource/badgerSettAddr-not-zero-address");
+        require(address(_badgerAddr) != address(0), "BadgerYieldSource/badgerAddr-not-zero-address");
+        badgerSett = _badgerSettAddr;
+        badger = _badgerAddr;
     }
 
     /// @notice Returns the ERC20 asset token used for deposits.
@@ -60,14 +61,12 @@ contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
     /// @param amount The amount of `token()` to be supplied
     /// @param to The user whose balance will receive the tokens
     function supplyTokenTo(uint256 amount, address to) external override nonReentrant {
-        IBadger _badger = badger;
-        IBadgerSett _badgerSett = badgerSett;
-        _badger.transferFrom(msg.sender, address(this), amount);
-        _badger.approve(address(_badgerSett), amount);
+        badger.safeTransferFrom(msg.sender, address(this), amount);
+        badger.approve(address(badgerSett), amount);
 
-        uint256 beforeBalance = _badgerSett.balanceOf(address(this));
-        _badgerSett.deposit(amount);
-        uint256 afterBalance = _badgerSett.balanceOf(address(this));
+        uint256 beforeBalance = badgerSett.balanceOf(address(this));
+        badgerSett.deposit(amount);
+        uint256 afterBalance = badgerSett.balanceOf(address(this));
         uint256 balanceDiff = afterBalance.sub(beforeBalance);
         balances[to] = balances[to].add(balanceDiff);
 
@@ -100,7 +99,7 @@ contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
 
         balances[msg.sender] = balances[msg.sender].sub(requiredSharesBalance);
 
-        badger.transfer(msg.sender, badgerBalanceDiff);
+        badger.safeTransfer(msg.sender, badgerBalanceDiff);
         emit RedeemedToken(msg.sender, requiredSharesBalance, amount);
 
         return (badgerBalanceDiff);
