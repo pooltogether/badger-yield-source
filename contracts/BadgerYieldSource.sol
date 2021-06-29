@@ -4,14 +4,17 @@ pragma solidity 0.6.12;
 
 import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "./IBadgerSett.sol";
 import "./IBadger.sol";
-import "hardhat/console.sol";
+
 
 /// @title A pooltogether yield source for badger sett
 /// @author Steffel Fenix, 0xkarl
 contract BadgerYieldSource is IYieldSource {
+    
     using SafeMath for uint256;
+    
     IBadgerSett private immutable badgerSett;
     IBadger private immutable badger;
     mapping(address => uint256) private balances;
@@ -64,7 +67,7 @@ contract BadgerYieldSource is IYieldSource {
         uint256 badgerBeforeBalance = badger.balanceOf(address(this));
 
         uint256 requiredShares =
-            ((amount.mul(totalShares) + totalShares)).div(
+            ((amount.mul(totalShares).add(totalShares))).div(
                 badgerSettBadgerBalance
             );
         if (requiredShares == 0) return 0;
