@@ -40,7 +40,7 @@ contract BadgerYieldSource is IYieldSource {
     /// @notice Allows assets to be supplied on other user's behalf using the `to` param.
     /// @param amount The amount of `token()` to be supplied
     /// @param to The user whose balance will receive the tokens
-    function supplyTokenTo(uint256 amount, address to) public override {
+    function supplyTokenTo(uint256 amount, address to) external override {
         badger.transferFrom(msg.sender, address(this), amount);
         badger.approve(address(badgerSett), amount);
 
@@ -54,7 +54,7 @@ contract BadgerYieldSource is IYieldSource {
     /// @notice Redeems tokens from the yield source to the msg.sender, it burns yield bearing tokens and returns token to the sender.
     /// @param amount The amount of `token()` to withdraw.  Denominated in `token()` as above.
     /// @return The actual amount of tokens that were redeemed.
-    function redeemToken(uint256 amount) public override returns (uint256) {
+    function redeemToken(uint256 amount) external override returns (uint256) {
         uint256 totalShares = badgerSett.totalSupply();
         if (totalShares == 0) return 0;
 
