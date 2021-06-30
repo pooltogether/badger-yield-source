@@ -60,12 +60,14 @@ contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
     /// @param amount The amount of `token()` to be supplied
     /// @param to The user whose balance will receive the tokens
     function supplyTokenTo(uint256 amount, address to) external override nonReentrant {
-        badger.transferFrom(msg.sender, address(this), amount);
-        badger.approve(address(badgerSett), amount);
+        IBadger _badger = badger;
+        IBadger _badgerSett = badgerSett;
+        _badger.transferFrom(msg.sender, address(this), amount);
+        _badger.approve(address(_badgerSett), amount);
 
-        uint256 beforeBalance = badgerSett.balanceOf(address(this));
-        badgerSett.deposit(amount);
-        uint256 afterBalance = badgerSett.balanceOf(address(this));
+        uint256 beforeBalance = _badgerSett.balanceOf(address(this));
+        _badgerSett.deposit(amount);
+        uint256 afterBalance = _badgerSett.balanceOf(address(this));
         uint256 balanceDiff = afterBalance.sub(beforeBalance);
         balances[to] = balances[to].add(balanceDiff);
 
