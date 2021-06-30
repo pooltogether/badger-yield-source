@@ -23,13 +23,13 @@ contract BadgerYieldSource is IYieldSource {
 
     /// @notice Returns the ERC20 asset token used for deposits.
     /// @return The ERC20 asset token
-    function depositToken() public view override returns (address) {
+    function depositToken() external view override returns (address) {
         return (address(badger));
     }
 
     /// @notice Returns the total balance (in asset tokens).  This includes the deposits and interest.
     /// @return The underlying balance of asset tokens
-    function balanceOfToken(address addr) public override returns (uint256) {
+    function balanceOfToken(address addr) external override returns (uint256) {
         if (balances[addr] == 0) return 0;
 
         uint256 totalShares = badgerSett.totalSupply();
