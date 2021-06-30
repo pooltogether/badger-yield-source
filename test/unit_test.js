@@ -17,6 +17,18 @@ describe("BadgerYieldSource", function () {
   let yieldSource;
   let amount;
 
+  let BadgerYieldSourceContract;
+
+  let isDeployTest = false;
+
+  const deployBadgerYieldSource = async (badgerSettAddress, badgerAddress) => {
+    yieldSource = await BadgerYieldSourceContract.deploy(
+      badgerSettAddress,
+      badgerAddress,
+      overrides,
+    );
+  };
+
   beforeEach(async function () {
     [wallet, wallet2, wallet3] = await ethers.getSigners();
 
@@ -34,16 +46,12 @@ describe("BadgerYieldSource", function () {
     );
     badgerSett = await BadgerSettContract.deploy();
 
-    //
-
     const tokenAddress = badger.address;
     const governanceAddress = wallet.address;
     const guardianAddress = wallet.address;
     const keeperAddress = wallet.address;
     const rewardsAddress = wallet.address;
     const strategistAddress = wallet.address;
-
-    //
 
     const Controller = await ethers.getContractFactory(
       "Controller",
@@ -89,17 +97,16 @@ describe("BadgerYieldSource", function () {
       "bBADGER"
     );
 
-    const BadgerYieldSourceContract = await ethers.getContractFactory(
+    BadgerYieldSourceContract = await ethers.getContractFactory(
       "BadgerYieldSource"
     );
-    yieldSource = await BadgerYieldSourceContract.deploy(
-      badgerSett.address,
-      badger.address,
-      overrides
-    );
 
-    // whilelist the yield source
-    await badgerSett.approveContractAccess(yieldSource.address);
+    if (!isDeployTest) {
+      await deployBadgerYieldSource(badgerSett.address, badger.address);
+
+      // whilelist the yield source
+      await badgerSett.approveContractAccess(yieldSource.address);
+    }
 
     amount = toWei("100");
     await badger.mint(wallet3.address, amount);
@@ -107,6 +114,28 @@ describe("BadgerYieldSource", function () {
     // let wallet2 deposit some badger into badgersett
     await badger.connect(wallet2).approve(badgerSett.address, amount.mul(99));
     await badgerSett.connect(wallet2).deposit(amount.mul(99));
+  });
+
+  describe('constructor()', () => {
+    before(() => {
+      isDeployTest = true;
+    });
+
+    after(() => {
+      isDeployTest = false;
+    });
+
+    it('should fail if badgerSett address is address 0', async () => {
+      await expect(
+        deployBadgerYieldSource(ethers.constants.AddressZero, badger.address),
+      ).to.be.revertedWith('BadgerYieldSource/badgerSettAddr-not-zero-address');
+    });
+
+    it('should fail if badger address is address 0', async () => {
+      await expect(
+        deployBadgerYieldSource(badgerSett.address, ethers.constants.AddressZero),
+      ).to.be.revertedWith('BadgerYieldSource/badgerAddr-not-zero-address');
+    });
   });
 
   it("get token address", async function () {
