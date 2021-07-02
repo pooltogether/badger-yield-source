@@ -43,7 +43,7 @@
     "lint": "yarn solhint 'contracts/BadgerYieldSource.sol' && yarn prettier -c './**/*.js'",
     "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js && yarn prettier --write scripts/*.js",
     "hint": "solhint \"contracts/BadgerYieldSource.sol\"",
-    "coverage": "FORK_MAINNET=true yarn hardhat coverage  --testfiles \"test/*.js\"",
+    "coverage": "hardhat coverage  --testfiles \"test/unit_test.js\"",
     "coverage:file": "yarn hardhat coverage --testfiles",
     "start-fork": "FORK_MAINNET=true hardhat node --no-reset --no-deploy",
     "fork-run": "hardhat run --network localhost"
