@@ -40,7 +40,7 @@
     "etherscan-verify": "hardhat etherscan-verify --network",
     "test:integration": "FORK_MAINNET=true env-cmd yarn hardhat test --network hardhat",
     "test": "yarn hardhat test --network hardhat test/unit_test.js",
-    "lint": "yarn solhint 'contracts/BadgerYieldSource.sol' && yarn prettier -c './**/*.js'",
+    "lint": "yarn solhint 'contracts/BadgerYieldSource.sol'",
     "format": "yarn prettier --write contracts/*.sol && yarn prettier --write test/*.js && yarn prettier --write scripts/*.js",
     "hint": "solhint \"contracts/BadgerYieldSource.sol\"",
     "coverage": "hardhat coverage  --testfiles \"test/unit_test.js\"",
