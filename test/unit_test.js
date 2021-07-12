@@ -120,7 +120,7 @@ describe("BadgerYieldSource", function () {
     );
     expect(await badger.callStatic.balanceOf(wallet3.address)).to.eq(amount);
     await badger.connect(wallet3).approve(yieldSource.address, amount);
-    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
+    expect(await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address)).to.emit(yieldSource, "SuppliedTokenTo");
     expect(await yieldSource.callStatic.balanceOfToken(wallet3.address)).to.eq(
       amount
     );
@@ -129,7 +129,7 @@ describe("BadgerYieldSource", function () {
 
   it("supplyTokenTo", async function () {
     await badger.connect(wallet3).approve(yieldSource.address, amount);
-    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
+    expect(await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address)).to.emit(yieldSource, "SuppliedTokenTo");
     expect(await badger.balanceOf(badgerSett.address)).to.eq(amount.mul(100));
     expect(await yieldSource.callStatic.balanceOfToken(wallet3.address)).to.eq(
       amount
@@ -138,10 +138,10 @@ describe("BadgerYieldSource", function () {
 
   it("redeemToken", async function () {
     await badger.connect(wallet3).approve(yieldSource.address, amount);
-    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
+    expect(await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address)).to.emit(yieldSource, "SuppliedTokenTo");;
 
     expect(await badger.balanceOf(wallet3.address)).to.eq(0);
-    await yieldSource.connect(wallet3).redeemToken(amount);
+    expect(await yieldSource.connect(wallet3).redeemToken(amount)).to.emit(yieldSource, "RedeemedToken");
     expect(await badger.balanceOf(wallet3.address)).to.eq(amount);
   });
 
