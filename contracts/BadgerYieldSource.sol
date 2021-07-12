@@ -4,17 +4,16 @@ pragma solidity 0.6.12;
 
 import { IYieldSource } from "@pooltogether/yield-source-interface/contracts/IYieldSource.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IBadgerSett.sol";
 import "./IBadger.sol";
 
 
 /// @title A pooltogether yield source for badger sett
 /// @author Steffel Fenix, 0xkarl
-contract BadgerYieldSource is IYieldSource {
-    
+contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
     using SafeMath for uint256;
-    
+
     IBadgerSett private immutable badgerSett;
     IBadger private immutable badger;
     mapping(address => uint256) private balances;
@@ -34,7 +33,7 @@ contract BadgerYieldSource is IYieldSource {
         address indexed to
     );
 
-    constructor(address badgerSettAddr, address badgerAddr) public {
+    constructor(address badgerSettAddr, address badgerAddr) public ReentrancyGuard() {
         require(address(badgerSettAddr) != address(0), "BadgerYieldSource/badgerSettAddr-not-zero-address");
         require(address(badgerAddr) != address(0), "BadgerYieldSource/badgerAddr-not-zero-address");
         badgerSett = IBadgerSett(badgerSettAddr);
@@ -60,7 +59,7 @@ contract BadgerYieldSource is IYieldSource {
     /// @notice Allows assets to be supplied on other user's behalf using the `to` param.
     /// @param amount The amount of `token()` to be supplied
     /// @param to The user whose balance will receive the tokens
-    function supplyTokenTo(uint256 amount, address to) external override {
+    function supplyTokenTo(uint256 amount, address to) external override nonReentrant {
         badger.transferFrom(msg.sender, address(this), amount);
         badger.approve(address(badgerSett), amount);
 
@@ -69,14 +68,14 @@ contract BadgerYieldSource is IYieldSource {
         uint256 afterBalance = badgerSett.balanceOf(address(this));
         uint256 balanceDiff = afterBalance.sub(beforeBalance);
         balances[to] = balances[to].add(balanceDiff);
-        
+
         emit SuppliedTokenTo(msg.sender, balanceDiff, amount, to);
     }
 
     /// @notice Redeems tokens from the yield source to the msg.sender, it burns yield bearing tokens and returns token to the sender.
     /// @param amount The amount of `token()` to withdraw.  Denominated in `token()` as above.
     /// @return The actual amount of tokens that were redeemed.
-    function redeemToken(uint256 amount) external override returns (uint256) {
+    function redeemToken(uint256 amount) external override nonReentrant returns (uint256) {
         uint256 totalShares = badgerSett.totalSupply();
         if (totalShares == 0) return 0;
 
