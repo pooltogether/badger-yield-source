@@ -35,6 +35,8 @@ contract BadgerYieldSource is IYieldSource {
     );
 
     constructor(address badgerSettAddr, address badgerAddr) public {
+        require(address(badgerSettAddr) != address(0), "BadgerYieldSource/badgerSettAddr-not-zero-address");
+        require(address(badgerAddr) != address(0), "BadgerYieldSource/badgerAddr-not-zero-address");
         badgerSett = IBadgerSett(badgerSettAddr);
         badger = IBadger(badgerAddr);
     }
