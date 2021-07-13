@@ -39,6 +39,21 @@ contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
         require(address(_badgerAddr) != address(0), "BadgerYieldSource/badgerAddr-not-zero-address");
         badgerSett = _badgerSettAddr;
         badger = _badgerAddr;
+
+        _badgerAddr.safeApprove(address(_badgerSettAddr), type(uint256).max);
+    }
+
+    /// @notice Approve Badger Sett vault to spend max uint256 amount
+    /// @dev Emergency function to re-approve max amount if approval amount dropped too low
+    /// @return true if operation is successful
+    function approveMaxAmount() external returns (bool) {
+        address _badgerSettAddress = address(badgerSett);
+        IERC20 _badger = badger;
+
+        uint256 allowance = _badger.allowance(address(this), _badgerSettAddress);
+
+        _badger.safeIncreaseAllowance(_badgerSettAddress, type(uint256).max.sub(allowance));
+        return true;
     }
 
     /// @notice Returns the ERC20 asset token used for deposits.
@@ -62,7 +77,6 @@ contract BadgerYieldSource is IYieldSource, ReentrancyGuard {
     /// @param to The user whose balance will receive the tokens
     function supplyTokenTo(uint256 amount, address to) external override nonReentrant {
         badger.safeTransferFrom(msg.sender, address(this), amount);
-        badger.approve(address(badgerSett), amount);
 
         uint256 beforeBalance = badgerSett.balanceOf(address(this));
         badgerSett.deposit(amount);

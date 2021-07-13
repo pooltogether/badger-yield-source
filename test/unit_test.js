@@ -125,6 +125,14 @@ describe("BadgerYieldSource", function () {
       isDeployTest = false;
     });
 
+    it('should succeed to construct yield source', async () => {
+      await deployBadgerYieldSource(badgerSett.address, badger.address);
+
+      expect(await badger.allowance(yieldSource.address, badgerSett.address)).to.equal(
+        ethers.constants.MaxUint256,
+      );
+    });
+
     it('should fail if badgerSett address is address 0', async () => {
       await expect(
         deployBadgerYieldSource(ethers.constants.AddressZero, badger.address),
@@ -135,6 +143,15 @@ describe("BadgerYieldSource", function () {
       await expect(
         deployBadgerYieldSource(badgerSett.address, ethers.constants.AddressZero),
       ).to.be.revertedWith('BadgerYieldSource/badgerAddr-not-zero-address');
+    });
+  });
+
+  describe('approveMaxAmount()', () => {
+    it('should approve Badger Sett to spend max uint256 amount', async () => {
+      expect(await yieldSource.callStatic.approveMaxAmount()).to.eq(true);
+      expect(await badger.allowance(yieldSource.address, badgerSett.address)).to.eq(
+        ethers.constants.MaxUint256,
+      );
     });
   });
 
