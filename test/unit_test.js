@@ -17,6 +17,18 @@ describe("BadgerYieldSource", function () {
   let yieldSource;
   let amount;
 
+  let BadgerYieldSourceContract;
+
+  let isDeployTest = false;
+
+  const deployBadgerYieldSource = async (badgerSettAddress, badgerAddress) => {
+    yieldSource = await BadgerYieldSourceContract.deploy(
+      badgerSettAddress,
+      badgerAddress,
+      overrides,
+    );
+  };
+
   beforeEach(async function () {
     [wallet, wallet2, wallet3] = await ethers.getSigners();
 
@@ -34,16 +46,12 @@ describe("BadgerYieldSource", function () {
     );
     badgerSett = await BadgerSettContract.deploy();
 
-    //
-
     const tokenAddress = badger.address;
     const governanceAddress = wallet.address;
     const guardianAddress = wallet.address;
     const keeperAddress = wallet.address;
     const rewardsAddress = wallet.address;
     const strategistAddress = wallet.address;
-
-    //
 
     const Controller = await ethers.getContractFactory(
       "Controller",
@@ -89,17 +97,16 @@ describe("BadgerYieldSource", function () {
       "bBADGER"
     );
 
-    const BadgerYieldSourceContract = await ethers.getContractFactory(
+    BadgerYieldSourceContract = await ethers.getContractFactory(
       "BadgerYieldSource"
     );
-    yieldSource = await BadgerYieldSourceContract.deploy(
-      badgerSett.address,
-      badger.address,
-      overrides
-    );
 
-    // whilelist the yield source
-    await badgerSett.approveContractAccess(yieldSource.address);
+    if (!isDeployTest) {
+      await deployBadgerYieldSource(badgerSett.address, badger.address);
+
+      // whilelist the yield source
+      await badgerSett.approveContractAccess(yieldSource.address);
+    }
 
     amount = toWei("100");
     await badger.mint(wallet3.address, amount);
@@ -107,6 +114,45 @@ describe("BadgerYieldSource", function () {
     // let wallet2 deposit some badger into badgersett
     await badger.connect(wallet2).approve(badgerSett.address, amount.mul(99));
     await badgerSett.connect(wallet2).deposit(amount.mul(99));
+  });
+
+  describe('constructor()', () => {
+    before(() => {
+      isDeployTest = true;
+    });
+
+    after(() => {
+      isDeployTest = false;
+    });
+
+    it('should succeed to construct yield source', async () => {
+      await deployBadgerYieldSource(badgerSett.address, badger.address);
+
+      expect(await badger.allowance(yieldSource.address, badgerSett.address)).to.equal(
+        ethers.constants.MaxUint256,
+      );
+    });
+
+    it('should fail if badgerSett address is address 0', async () => {
+      await expect(
+        deployBadgerYieldSource(ethers.constants.AddressZero, badger.address),
+      ).to.be.revertedWith('BadgerYieldSource/badgerSettAddr-not-zero-address');
+    });
+
+    it('should fail if badger address is address 0', async () => {
+      await expect(
+        deployBadgerYieldSource(badgerSett.address, ethers.constants.AddressZero),
+      ).to.be.revertedWith('BadgerYieldSource/badgerAddr-not-zero-address');
+    });
+  });
+
+  describe('approveMaxAmount()', () => {
+    it('should approve Badger Sett to spend max uint256 amount', async () => {
+      expect(await yieldSource.callStatic.approveMaxAmount()).to.eq(true);
+      expect(await badger.allowance(yieldSource.address, badgerSett.address)).to.eq(
+        ethers.constants.MaxUint256,
+      );
+    });
   });
 
   it("get token address", async function () {
@@ -120,7 +166,7 @@ describe("BadgerYieldSource", function () {
     );
     expect(await badger.callStatic.balanceOf(wallet3.address)).to.eq(amount);
     await badger.connect(wallet3).approve(yieldSource.address, amount);
-    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
+    expect(await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address)).to.emit(yieldSource, "SuppliedTokenTo");
     expect(await yieldSource.callStatic.balanceOfToken(wallet3.address)).to.eq(
       amount
     );
@@ -129,7 +175,7 @@ describe("BadgerYieldSource", function () {
 
   it("supplyTokenTo", async function () {
     await badger.connect(wallet3).approve(yieldSource.address, amount);
-    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
+    expect(await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address)).to.emit(yieldSource, "SuppliedTokenTo");
     expect(await badger.balanceOf(badgerSett.address)).to.eq(amount.mul(100));
     expect(await yieldSource.callStatic.balanceOfToken(wallet3.address)).to.eq(
       amount
@@ -138,10 +184,10 @@ describe("BadgerYieldSource", function () {
 
   it("redeemToken", async function () {
     await badger.connect(wallet3).approve(yieldSource.address, amount);
-    await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address);
+    expect(await yieldSource.connect(wallet3).supplyTokenTo(amount, wallet3.address)).to.emit(yieldSource, "SuppliedTokenTo");;
 
     expect(await badger.balanceOf(wallet3.address)).to.eq(0);
-    await yieldSource.connect(wallet3).redeemToken(amount);
+    expect(await yieldSource.connect(wallet3).redeemToken(amount)).to.emit(yieldSource, "RedeemedToken");
     expect(await badger.balanceOf(wallet3.address)).to.eq(amount);
   });
 
