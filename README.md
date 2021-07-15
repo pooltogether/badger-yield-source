@@ -1,6 +1,6 @@
-[![Coverage Status](https://coveralls.io/repos/github/0xkarl/badger-sett-pooltogether/badge.svg?branch=master)](https://coveralls.io/github/0xkarl/badger-sett-pooltogether?branch=master)
-![Tests](https://github.com/0xkarl/badger-sett-pooltogether/actions/workflows/test.yml/badge.svg)
-![Linting](https://github.com/0xkarl/badger-sett-pooltogether/actions/workflows/lint.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/pooltogether/badger-yield-source/badge.svg?branch=master)](https://coveralls.io/github/0xkarl/badger-sett-pooltogether?branch=master)
+![Tests](https://github.com/pooltogether/badger-yield-source/actions/workflows/test.yml/badge.svg)
+![Linting](https://github.com/pooltogether/badger-yield-source/actions/workflows/lint.yml/badge.svg)
 
 Adapted from https://github.com/steffenix/sushi-pooltogether
 
